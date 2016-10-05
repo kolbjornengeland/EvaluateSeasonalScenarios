@@ -249,6 +249,7 @@ out$crpss<-EnsCrpss(maxvalues_sim[!is.na(maxvalues_obs),], ens.ref[!is.na(maxval
 out$brierss_q5<-EnsBrierSs(maxvalues_sim[!is.na(maxvalues_obs),], ens.ref[!is.na(maxvalues_obs),], maxvalues_obs[!is.na(maxvalues_obs)],flood_values[ci,8])
 out$brierss_q50<-EnsBrierSs(maxvalues_sim[!is.na(maxvalues_obs),], ens.ref[!is.na(maxvalues_obs),], maxvalues_obs[!is.na(maxvalues_obs)],flood_values[ci,9])
 out$csi<-csi
+out$ndata<-30
 out
 }
 
