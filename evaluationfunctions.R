@@ -1,4 +1,4 @@
-
+# Description of function
 
 plot_forecast<-function(rnr,hnr,syear,smonth,flood_values,ptype="greyshade"){
 ndays<-c(1,31,28,31,30,31,30,31,31,30,31,30,fpath='../data/netcdf/')
