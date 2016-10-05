@@ -1,0 +1,75 @@
+# My work directopry. You should change to your own work directory
+# setwd("M:/Dokumenter/Sesongvarsler")
+setwd("E:")
+
+library('RNetCDF')
+library('ensembleBMA')
+library('SpecsVerification')
+
+flood_values<-read.table('flomtabell_ny.txt',sep="")
+
+
+source('Seasonal_analysis_functions.txt')
+
+
+plot_forecast(2,11,1975,4,flood_values)
+
+plot_forecast(2,11,1975,4,flood_values,ptype="spaghetti")
+
+out<-analyze_forecast(2,11,4)
+
+
+
+
+verifRankHist(maxvalues_sim, maxvalues_obs)
+
+
+
+#
+
+
+
+# THE CONTINUOUSLY RANKED PROBABILITY SCORE FOR ENSEMBLE FORECASTS
+
+
+
+#
+
+
+
+# ens ... ensemble values (matrix of dimension N*K)
+
+
+
+# obs ... observations (vector of length N)
+
+
+
+#
+
+
+
+################################
+
+
+
+EnsCrps <-  function(ens, obs) {
+#l <- Preprocess(ens=ens, obs=obs)
+#ens  <- l[["ens"]]
+#obs <- l[["obs"]]
+obs<-maxvalues_obs
+ens<-maxvalues_sim
+N  <- length(obs)
+K <- apply(ens, 1, function(x) length(x[!is.na(x)]))
+K[K==0]<- NA
+crps <- sapply(1:N,function(i) mean(abs(ens[i,] - obs[i]), na.rm=TRUE) - sum(dist(ens[i,]), na.rm=TRUE) / (K[i]^2))
+crps[is.nan(crps)] <- NA
+return(crps)
+}
+
+
+
+
+
+
+
