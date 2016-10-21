@@ -29,9 +29,9 @@ filepath is here the path where the original files are stored
 qobspath is path to where the observed streamflows are stored
 outpath is here the path where the NetCDF files should be written
 ```R
-filepath<-('X:/Hbv/ScenarioerFou/vf')
-qobspath<-c('inst/Disc')
-outpath<-('M:/Dokumenter/Sesongvarsler')
+filepath<-'X:/Hbv/ScenarioerFou/vf'
+qobspath<-'inst/Disc'
+outpath<-'M:/Dokumenter/Sesongvarsler'
 create_netcdffiles(filepath,outpath)
 ```
 
@@ -104,8 +104,12 @@ analyze_forecast(Rnr,Hnr,Smonth,fpath=NetCDFfolder,flood_values,qtrans=NA,mplot=
 NetCDFfolder="M:/Dokumenter/Sesongvarsler/"
 flood_values<-read.table('inst/flomtabell_ny.txt',sep="")
 qtransform<-read.table("inst/Transformations.txt")
+qtransform_sel<-qtransform[qtransform[,2]>30,]
+# Hack. need to exclude 22.16, 41.1 and 83.20 for the moment. Problems with missing data for scenarios,
+qtransform_sel<-qtransform_sel[-c(74,94,100),]
 
-analyse_all(NetCDFfolder,flood_values,qtransform)
+
+seasonal_evaluation<-analyse_all(NetCDFfolder,flood_values,qtransform_sel)
 
 
 

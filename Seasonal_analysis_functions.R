@@ -239,6 +239,18 @@ qsim_sel_t[m,n]<-nsRFA::invF.gumb (FF1,parsel[1], parsel[2])
 maxvalues_sim<-qsim_sel_t
 }
 
+for(i in 1 : length(fyears)){
+si=which(fyears[i]!=scenario)
+ens.ref[i,]<-maxvalues_obs[si]
+}
+
+
+
+#maxvalues_obs<-maxvalues_obs[maxvalues_sim[,1]>0]
+#ens.ref<-ens.ref[maxvalues_sim[,1]>0,]
+#maxvalues_sim<-maxvalues_sim[maxvalues_sim[,1]>0,]
+
+
 roc_area<-c()
 roc_pvalue<-c()
 for(j in 1 : 3){
@@ -267,10 +279,7 @@ roc_pvalue[j]=roc_out$p.value
 }
 
 
-for(i in 1 : length(fyears)){
-si=which(fyears[i]!=scenario)
-ens.ref[i,]<-maxvalues_obs[si]
-}
+
 
 if(mplot){
 windows(12,8)
@@ -326,7 +335,7 @@ out$brier_q50<-SpecsVerification::EnsBrier(maxvalues_sim, maxvalues_obs,flood_va
 qsim_50<-apply(maxvalues_sim,1,quantile,0.5)
 out$rmse<-sqrt(mean((qsim_50-maxvalues_obs)^2))
 out$Reff<-1.0-(mean((qsim_50-maxvalues_obs)^2)/var(maxvalues_obs))
-out$corr<-cor(maxvalues_obs,qsim_50)
+out$corr<-cor(maxvalues_obs,qsim_50,use="pairwise.complete.obs")
 out$crpss<-SpecsVerification::EnsCrpss(maxvalues_sim, ens.ref, maxvalues_obs) 
 out$brierss_qmean<-SpecsVerification::EnsBrierSs(maxvalues_sim, ens.ref, maxvalues_obs,flood_values[ci,7])
 out$brierss_q5<-SpecsVerification::EnsBrierSs(maxvalues_sim, ens.ref, maxvalues_obs,flood_values[ci,8])
@@ -345,21 +354,28 @@ analyse_all<-function(npath,flood_values,qtrans){
 			temp<-matrix(unlist(strsplit(as.character(qtrans[,1]),'.',fixed=TRUE)) ,ncol=5,byrow=TRUE)
 			rnr<-as.integer(temp[i])
 			hnr<-as.integer(temp[i,2])
-			out_analyze[[i]][[j]]<-list(analyze_forecast(rnr,hnr,j,fpath=npath,flood_values=flood_values,qtrans=qtrans,mplot=FALSE))
+			out_analyze[[i]][[j]]<-analyze_forecast(rnr,hnr,j,fpath=npath,flood_values=flood_values,qtrans=qtrans,mplot=FALSE)
 		}
 	}
 	return(out_analyze)
 }
 
+#get_corr_month(seasonal_evaluation,qtransform_sel[,2],3)
 
 
-
-get_corr_month<-function(out,mm){
-corr_allN35<-rep(NA,dim(N35)[1])
-for(i in 1 : dim(N35)[1])
-corr_allN35[i]<- out_analyze2[[i]][[mm]][[1]]$corr
-corr_allN35
+get_corr_month<-function(out,ndata,mm){
+corr_all<-rep(NA,length(out))
+for(i in 1 : length(out))
+corr_all[i]<- out[[i]][[mm]]$corr
+# Beregner t-value:
+tt<-abs(qt(0.05,ndata-2))
+#beregner kritisk verdi for korrelasjon
+rr= tt/sqrt(ndata-2+tt^2)
+return(cbind(corr_all,rr))
 }
+
+
+
 
 get_crpss_month<-function(out,mm){
 
