@@ -50,7 +50,9 @@ create_transformations(HBV,Qobs,outf)
 
 ## Plotting scenarios
 Plots the seasonal scenarios for a selected catchment, year and month
-H
+Rnr is Regine area
+Hnr is main number
+Syear is year
 Qobs_path is path to where the observed streamflows are stored
 outfile is here the name of the output file
 
