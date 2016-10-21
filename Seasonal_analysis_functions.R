@@ -144,8 +144,7 @@ lty=c(1,1,1,1,1,1,2,2,2),col=c("blue","cyan","grey","grey","yellow","orange","re
 
 
 
-analyze_forecast<-function(rnr,hnr,smonth,fpath="../data/netcdf/",
-qtrans=NA,mplot=TRUE){
+analyze_forecast<-function(rnr,hnr,smonth,fpath="../data/netcdf/",flood_values,qtrans=NA,mplot=TRUE){
 if (!require('RNetCDF')) {
     stop('The package RNetCDF was not installed')
   }
@@ -328,15 +327,34 @@ qsim_50<-apply(maxvalues_sim,1,quantile,0.5)
 out$rmse<-sqrt(mean((qsim_50-maxvalues_obs)^2))
 out$Reff<-1.0-(mean((qsim_50-maxvalues_obs)^2)/var(maxvalues_obs))
 out$corr<-cor(maxvalues_obs,qsim_50)
-out$crpss<-ESpecsVerification::nsCrpss(maxvalues_sim, ens.ref, maxvalues_obs) 
+out$crpss<-SpecsVerification::EnsCrpss(maxvalues_sim, ens.ref, maxvalues_obs) 
 out$brierss_qmean<-SpecsVerification::EnsBrierSs(maxvalues_sim, ens.ref, maxvalues_obs,flood_values[ci,7])
 out$brierss_q5<-SpecsVerification::EnsBrierSs(maxvalues_sim, ens.ref, maxvalues_obs,flood_values[ci,8])
-out$brierss_q50<-SpecsVerification:EnsBrierSs(maxvalues_sim, ens.ref, maxvalues_obs,flood_values[ci,9])
+out$brierss_q50<-SpecsVerification::EnsBrierSs(maxvalues_sim, ens.ref, maxvalues_obs,flood_values[ci,9])
 
 out
 }
 
-get_corr_monthN35<-function(out,mm){
+
+analyse_all<-function(npath,flood_values,qtrans){
+	out_analyze<-list()
+	for(i in 1 : dim(qtrans)[1]){
+		out_analyze[[i]]<-list() 
+		for( j in 1 : 7){
+		print(c(i,j))
+			temp<-matrix(unlist(strsplit(as.character(qtrans[,1]),'.',fixed=TRUE)) ,ncol=5,byrow=TRUE)
+			rnr<-as.integer(temp[i])
+			hnr<-as.integer(temp[i,2])
+			out_analyze[[i]][[j]]<-list(analyze_forecast(rnr,hnr,j,fpath=npath,flood_values=flood_values,qtrans=qtrans,mplot=FALSE))
+		}
+	}
+	return(out_analyze)
+}
+
+
+
+
+get_corr_month<-function(out,mm){
 corr_allN35<-rep(NA,dim(N35)[1])
 for(i in 1 : dim(N35)[1])
 corr_allN35[i]<- out_analyze2[[i]][[mm]][[1]]$corr
