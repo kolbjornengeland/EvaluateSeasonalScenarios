@@ -253,14 +253,18 @@ ens.ref[i,]<-maxvalues_obs[si]
 
 roc_area<-c()
 roc_pvalue<-c()
+csi<-c()
 for(j in 1 : 3){
 
 outcome<-as.integer(maxvalues_obs>flood_values[ci,(3+j)])
+forecasted<-as.integer(quantile(maxvalues_sim,0.5)>flood_values[ci,(3+j)])
 if(sum(na.omit(outcome))==0){
 roc_area[j]=0
 roc_pvalue[j]=0
+csi[j]=0
 }
 else{
+csi[j]=sum(outcome&forecasted) / (sum(outcome) + sum(forecasted&!outcome))
 p_flood<-rowMeans(maxvalues_sim>flood_values[ci,(6+j)])
 p_flood<-p_flood[!is.na(outcome)]
 outcome<-na.omit(outcome)
@@ -334,33 +338,35 @@ out$brier_q5<-SpecsVerification::EnsBrier(maxvalues_sim, maxvalues_obs,flood_val
 out$brier_q50<-SpecsVerification::EnsBrier(maxvalues_sim, maxvalues_obs,flood_values[ci,9])
 qsim_50<-apply(maxvalues_sim,1,quantile,0.5)
 out$rmse<-sqrt(mean((qsim_50-maxvalues_obs)^2))
-out$Reff<-1.0-(mean((qsim_50-maxvalues_obs)^2)/var(maxvalues_obs))
+out$Reff<-1.0-(mean((qsim_50-maxvalues_obs)^2,na.rm=TRUE)/var(maxvalues_obs,na.rm=TRUE))
 out$corr<-cor(maxvalues_obs,qsim_50,use="pairwise.complete.obs")
 out$crpss<-SpecsVerification::EnsCrpss(maxvalues_sim, ens.ref, maxvalues_obs) 
 out$brierss_qmean<-SpecsVerification::EnsBrierSs(maxvalues_sim, ens.ref, maxvalues_obs,flood_values[ci,7])
 out$brierss_q5<-SpecsVerification::EnsBrierSs(maxvalues_sim, ens.ref, maxvalues_obs,flood_values[ci,8])
 out$brierss_q50<-SpecsVerification::EnsBrierSs(maxvalues_sim, ens.ref, maxvalues_obs,flood_values[ci,9])
-
+out$csi<-csi
 out
 }
 
 
 analyse_all<-function(npath,flood_values,qtrans){
 	out_analyze<-list()
+	temp<-matrix(unlist(strsplit(as.character(qtrans[,1]),'.',fixed=TRUE)) ,ncol=5,byrow=TRUE)	
 	for(i in 1 : dim(qtrans)[1]){
 		out_analyze[[i]]<-list() 
+		rnr<-as.integer(temp[i])
+		hnr<-as.integer(temp[i,2])		
 		for( j in 1 : 7){
 		print(c(i,j))
-			temp<-matrix(unlist(strsplit(as.character(qtrans[,1]),'.',fixed=TRUE)) ,ncol=5,byrow=TRUE)
-			rnr<-as.integer(temp[i])
-			hnr<-as.integer(temp[i,2])
+
 			out_analyze[[i]][[j]]<-analyze_forecast(rnr,hnr,j,fpath=npath,flood_values=flood_values,qtrans=qtrans,mplot=FALSE)
 		}
 	}
+	names(out_analyze)<-paste(temp[,1],'.',temp[,2],sep='')
 	return(out_analyze)
 }
 
-#get_corr_month(seasonal_evaluation,qtransform_sel[,2],3)
+
 
 
 get_corr_month<-function(out,ndata,mm){
@@ -371,30 +377,118 @@ corr_all[i]<- out[[i]][[mm]]$corr
 tt<-abs(qt(0.05,ndata-2))
 #beregner kritisk verdi for korrelasjon
 rr= tt/sqrt(ndata-2+tt^2)
-return(cbind(corr_all,rr))
+cout<-cbind(corr_all,rr)
+rownames(cout)<-names(out)
+return(cout)
 }
 
+
+
+get_corr_all<-function(out,ndata){
+corr_out<-matrix(NA,ncol=10,nrow=length(out))
+colnames(corr_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_corr','Month','R_sig')
+rownames(corr_out)<-names(out)
+for(i in 1 : 7){
+corr_out[,i]<-get_corr_month(out,ndata,i)[,1]
+}
+corr_out[,8]<-apply(corr_out[,1:7],1,max)
+corr_out[,9]<-apply(corr_out[,1:7],1,which.max)
+corr_out[,10]<-get_corr_month(out,ndata,1)[2,]
+return(corr_out)
+}
 
 
 
 get_crpss_month<-function(out,mm){
-
-crpss_all<-rep(NA,dim(qtransform_sel)[1]) 
-
- for(i in 1 : dim(qtransform_sel)[1]) 
- 
- crpss_all[i]<- out_analyze[[i]][[mm]][[1]]$crpss$crpss 
-
-crpss_all 
-
+crpss_all<-matrix(NA,ncol=2,nrow=length(out)) 
+ for(i in 1 : length(out)) {
+ crpss_all[i,1]<- out[[i]][[mm]]$crpss$crpss
+ crpss_all[i,2]<- out[[i]][[mm]]$crpss$crpss.sigma 
+}
+ return(crpss_all)
 }
 
-get_corr_month<-function(out,mm){
-corr_all<-rep(NA,dim(qtransform_sel)[1])
-for(i in 1 : dim(qtransform_sel)[1])
-corr_all[i]<- out_analyze[[i]][[mm]][[1]]$corr
-corr_all
+get_crpss_all<-function(out){
+crpss_out<-matrix(NA,ncol=17,nrow=length(out))
+colnames(crpss_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_crpss','Month','Sig_Jan','Sig_Feb','Sig_Mar','Sig_Apr','Sig_Mai','Sig_Jun','Sig_Jul','Sig_all')
+rownames(crpss_out)<-names(out)
+for(i in 1 : 7){
+temp<-get_crpss_month(out,mm=i)
+crpss_out[,i]<-temp[,1]
+crpss_out[,(9+i)]<-temp[,2]
 }
+crpss_out[,8]<-apply(crpss_out[,1:7],1,max)
+crpss_out[,9]<-apply(crpss_out[,1:7],1,which.max)
+crpss_out[,17]<-sapply(c(1:length(out)),FUN=function(i){return(crpss_out[i,crpss_out[i,9]+9])})
+return(crpss_out)
+}
+
+
+
+
+
+
+get_roc_month<-function(out,mm,ri){
+roc_out<-matrix(NA,ncol=2,nrow=length(out)) 
+rownames(roc_out)<-names(out)
+ for(i in 1 : length(out)) {
+ roc_out[i,1]<- out[[i]][[mm]]$roc_area[ri]
+ roc_out[i,2]<- out[[i]][[mm]]$roc_pvalue[ri]
+}
+ return(roc_out)
+}
+
+
+
+get_roc_all<-function(out,ri){
+roc_out<-matrix(NA,ncol=17,nrow=length(out))
+colnames(roc_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_roc','Month','P_Jan','P_Feb','P_Mar','P_Apr','P_Mai','P_Jun','P_Jul','Sig_all')
+rownames(roc_out)<-names(out)
+for(i in 1 : 7){
+temp<-get_roc_month(out,mm=i,ri)
+roc_out[,i]<-temp[,1]
+roc_out[,(9+i)]<-temp[,2]
+}
+roc_out[,8]<-apply(roc_out[,1:7],1,max)
+roc_out[,9]<-apply(roc_out[,1:7],1,which.max)
+roc_out[,17]<-sapply(c(1:length(out)),FUN=function(i){return(roc_out[i,roc_out[i,9]+9])})
+return(roc_out)
+}
+
+
+
+
+get_bss_month<-function(out,mm){
+bss_out<-matrix(NA,ncol=2,nrow=length(out)) 
+rownames(bss_out)<-names(out)
+ for(i in 1 : length(out)) {
+ bss_out[i,1]<- out[[i]][[mm]]$brierss_qmean$bss
+ bss_out[i,2]<- out[[i]][[mm]]$brierss_qmean$bss.sigma
+}
+ return(bss_out)
+}
+
+
+
+get_bss_all<-function(out){
+bss_out<-matrix(NA,ncol=17,nrow=length(out))
+colnames(bss_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_bss','Month','Sig_Jan','Sig_Feb','Sig_Mar','Sig_Apr','Sig_Mai','Sig_Jun','Sig_Jul','Sig_all')
+rownames(bss_out)<-names(out)
+for(i in 1 : 7){
+temp<-get_bss_month(out,mm=i)
+bss_out[,i]<-temp[,1]
+bss_out[,(9+i)]<-temp[,2]
+}
+bss_out[,8]<-apply(bss_out[,1:7],1,max,na.rm=TRUE)
+bss_out[,9]<-apply(bss_out[,1:7],1,which.max)
+bss_out[,17]<-sapply(c(1:length(out)),FUN=function(i){return(bss_out[i,bss_out[i,9]+9])})
+return(bss_out)
+}
+
+
+
+
+
 
 get_rmse_month<-function(out,mm){
 rmse_all<-rep(NA,dim(qtransform_sel)[1])
@@ -403,12 +497,6 @@ rmse_all[i]<- out_analyze[[i]][[mm]][[1]]$rmse
 rmse_all
 }
 
-get_brierss_qmean_month<-function(out,mm){
-brierss_all<-rep(NA,dim(qtransform_sel)[1])
-for(i in 1 : dim(qtransform_sel)[1])
-brierss_all[i]<- out_analyze[[i]][[mm]][[1]]$brierss_qmean$bss
-brierss_all
-}
 
 get_csi<-function(out,mm){
 csi_all<-rep(NA,dim(qtransform_sel)[1])
@@ -417,9 +505,3 @@ csi_all[i]<- out_analyze[[i]][[mm]][[1]]$csi
 csi_all
 }
 
-get_ROC_mean<-function(out,mm){
-ROC_mean_all<-rep(NA,dim(qtransform_sel)[1])
-for(i in 1 : dim(qtransform_sel)[1])
-ROC_mean_all[i]<- out_analyze[[i]][[mm]][[1]]$roc_area[1]
-ROC_mean_all
-}
