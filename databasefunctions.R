@@ -29,6 +29,8 @@ hnr<-stemp[seq(from=2, to=dim.stations*2,by=2)]
 
 
 for(i in 1 : dim.stations){
+
+
 nc <- create.nc(paste(outpath,"/seasonal_forecast_database_",stations[i],".nc",sep=''))  # CHECK DIR
 create_database(nc)
 
@@ -62,6 +64,7 @@ sync.nc(nc)
 }
 close.nc(nc)
 }
+
 }
 
 
