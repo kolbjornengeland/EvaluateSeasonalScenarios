@@ -255,19 +255,27 @@ roc_area<-c()
 roc_pvalue<-c()
 csi<-c()
 for(j in 1 : 3){
-
+#print(dim(maxvalues_sim))
+#print(length(maxvalues_obs))
+#print(apply(maxvalues_sim,1,quantile,0.5))
 outcome<-as.integer(maxvalues_obs>flood_values[ci,(3+j)])
-forecasted<-as.integer(quantile(maxvalues_sim,0.5)>flood_values[ci,(3+j)])
+forecasted<-as.integer(apply(maxvalues_sim,1,quantile,0.5)>flood_values[ci,(3+j)])
 if(sum(na.omit(outcome))==0){
-roc_area[j]=0
-roc_pvalue[j]=0
-csi[j]=0
+roc_area[j] <- 0
+roc_pvalue[j] <- 0
+csi[j]<- -1.0
 }
 else{
-csi[j]=sum(outcome&forecasted) / (sum(outcome) + sum(forecasted&!outcome))
+
 p_flood<-rowMeans(maxvalues_sim>flood_values[ci,(6+j)])
 p_flood<-p_flood[!is.na(outcome)]
+forecasted<-forecasted[!is.na(outcome)]
 outcome<-na.omit(outcome)
+#print(outcome)
+#print(forecasted)
+stemp=(sum(outcome) + sum(forecasted&!outcome))
+csi[j]<- (-1.0)
+if(stemp>0) csi[j]=sum(outcome&forecasted) / stemp
 if(mplot){
 windows(6,6)
 roc_out<-verification::roc.plot(outcome,p_flood,thresholds=seq(0.0,1.0,by=0.1))
@@ -412,11 +420,11 @@ return(Reff_all)
 
 
 get_Reff_all<-function(out,ndata){
-Reff_out<-matrix(NA,ncol=10,nrow=length(out))
-colnames(Reff_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_corr','Month')
+Reff_out<-matrix(NA,ncol=9,nrow=length(out))
+colnames(Reff_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_Reff','Month')
 rownames(Reff_out)<-names(out)
 for(i in 1 : 7){
-Reff_out[,i]<-get_Reff_month(out,i)[1]
+Reff_out[,i]<-get_Reff_month(out,i)
 }
 Reff_out[,8]<-apply(Reff_out[,1:7],1,max)
 Reff_out[,9]<-apply(Reff_out[,1:7],1,which.max)
@@ -440,9 +448,9 @@ return(csi_all)
 
 
 
-get_csi_all<-function(out,ndata,ri){
-csi_out<-matrix(NA,ncol=10,nrow=length(out))
-colnames(csi_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_corr','Month')
+get_csi_all<-function(out,ri){
+csi_out<-matrix(NA,ncol=9,nrow=length(out))
+colnames(csi_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_csi','Month')
 rownames(csi_out)<-names(out)
 for(i in 1 : 7){
 csi_out[,i]<-get_csi_month(out,i,ri)

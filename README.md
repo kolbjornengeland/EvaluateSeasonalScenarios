@@ -131,6 +131,13 @@ qtransform_sel<-qtransform[qtransform[,2]>30,]
 qtransform_sel<-qtransform_sel[-c(74,94,100),]
 
 seasonal_evaluation<-analyse_all(NetCDFfolder,flood_values,qtransform_sel)
+
+corr_all<-get_corr_all(out=seasonal_evaluation,ndata=qtransform_sel[,2])
+crpss_all<-get_crpss_all(out=seasonal_evaluation)
+roc_all<-get_roc_all(out=seasonal_evaluation,ri=1)
+bss_all<-get_bss_all(out=seasonal_evaluation)
+Reff_all<-get_Reff_all(out=seasonal_evaluation)
+csi_all<-get_csi_all(out=seasonal_evaluation,1)
 ```
 
 
@@ -238,3 +245,6 @@ out is the output from 'analyse_all'
 bss_all<-get_bss_all(out=seasonal_evaluation)
 ```
 
+
+Reff_all<-get_Reff_all(out=seasonal_evaluation)
+csi_all<-get_csi_all(out=seasonal_evaluation,1)
