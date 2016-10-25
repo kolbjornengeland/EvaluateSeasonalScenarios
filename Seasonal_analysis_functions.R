@@ -416,7 +416,7 @@ Reff_out<-matrix(NA,ncol=10,nrow=length(out))
 colnames(Reff_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_corr','Month')
 rownames(Reff_out)<-names(out)
 for(i in 1 : 7){
-Reff_out[,i]<-get_Reff_month(out,i)
+Reff_out[,i]<-get_Reff_month(out,i)[1]
 }
 Reff_out[,8]<-apply(Reff_out[,1:7],1,max)
 Reff_out[,9]<-apply(Reff_out[,1:7],1,which.max)
