@@ -10,6 +10,7 @@ Download the *.R files into your own directory and 'source' them:
 setwd('C:/Users/koe/Documents/EvaluateSeasonalScenarios/')
 source('databasefunctions.R')
 source('Seasonal_analysis_functions.R')
+source('creating_transformations.R')
 ```
 
 You will need the RNetCDF package:
@@ -120,7 +121,7 @@ Arguments:
 * fpath is the path to where the forecast NetCDF files are stored
 * mplot is TRUE for showing evaluation plots.
  
-
+Also provided: scripts for organising evaluation scores into matrixes
 
 ```R
 NetCDFfolder="M:/Dokumenter/Sesongvarsler/"
@@ -245,10 +246,42 @@ out is the output from 'analyse_all'
 bss_all<-get_bss_all(out=seasonal_evaluation)
 ```
 
+## Extracting Reff for all catchments for one month:
 
+Returns: matrix with Reff value
+
+out is the output from 'analyse_all'
+mm is the month
+
+```R
+Reff_march<-get_reff_month(out=seasonal_evaluation,mm=3)
+```
+
+
+## Extracting Reff  for all catchments for all months:
+
+```R
 Reff_all<-get_Reff_all(out=seasonal_evaluation)
-csi_all<-get_csi_all(out=seasonal_evaluation,1)
+```
 
+
+## Extracting csi for all catchments for one month:
+
+Returns: matrix with csi value
+
+out is the output from 'analyse_all'
+mm is the month
+
+```R
+csi_march<-get_csi_month(out=seasonal_evaluation,mm=3)
+```
+
+
+## Extracting CSI  for all catchments for all months:
+
+```R
+csi_all<-get_csi_all(out=seasonal_evaluation,1)
+```
 
 regimer<-read.table('inst/Regimer_Rett_20_okt.txt',sep=",",header=TRUE
 regimer_s<-regimer[match(paste(rownames(Reff_all),'.0',sep=''),regimer[,4]),]
