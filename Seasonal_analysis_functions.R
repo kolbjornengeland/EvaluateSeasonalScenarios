@@ -471,18 +471,19 @@ return(csi_out)
 
 
 
-get_crpss_month<-function(out,mm){
+get_crpss_month<-function(out,mm,rl){
 crpss_all<-matrix(NA,ncol=2,nrow=length(out)) 
  for(i in 1 : length(out)) {
  crpss_all[i,1]<- out[[i]][[mm]]$crpss$crpss
- crpss_all[i,2]<- out[[i]][[mm]]$crpss$crpss.sigma 
+ crpss_all[i,2]<- pt(crpss_out[i,1]/out[[i]][[mm]]$crpss$crpss.sigma,df=rl-1,lower.tail=FALSE)
+ 
 }
  return(crpss_all)
 }
 
-get_crpss_all<-function(out){
+get_crpss_all<-function(out,rl){
 crpss_out<-matrix(NA,ncol=17,nrow=length(out))
-colnames(crpss_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_crpss','Month','Sig_Jan','Sig_Feb','Sig_Mar','Sig_Apr','Sig_Mai','Sig_Jun','Sig_Jul','Sig_all')
+colnames(crpss_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_crpss','Month','P_Jan','P_Feb','P_Mar','P_Apr','P_Mai','P_Jun','P_Jul','P_all')
 rownames(crpss_out)<-names(out)
 for(i in 1 : 7){
 temp<-get_crpss_month(out,mm=i)
@@ -530,24 +531,24 @@ return(roc_out)
 
 
 
-get_bss_month<-function(out,mm){
+get_bss_month<-function(out,mm,rl){
 bss_out<-matrix(NA,ncol=2,nrow=length(out)) 
 rownames(bss_out)<-names(out)
  for(i in 1 : length(out)) {
  bss_out[i,1]<- out[[i]][[mm]]$brierss_qmean$bss
- bss_out[i,2]<- out[[i]][[mm]]$brierss_qmean$bss.sigma
+ bss_out[i,2]<- pt(bss_out[i,1]/out[[i]][[mm]]$brierss_qmean$bss.sigma,df=rl-1,lower.tail=FALSE)
 }
  return(bss_out)
 }
 
 
 
-get_bss_all<-function(out){
+get_bss_all<-function(out,rl){
 bss_out<-matrix(NA,ncol=17,nrow=length(out))
-colnames(bss_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_bss','Month','Sig_Jan','Sig_Feb','Sig_Mar','Sig_Apr','Sig_Mai','Sig_Jun','Sig_Jul','Sig_all')
+colnames(bss_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_bss','Month','P_Jan','P_Feb','P_Mar','P_Apr','P_Mai','P_Jun','P_Jul','P_all')
 rownames(bss_out)<-names(out)
 for(i in 1 : 7){
-temp<-get_bss_month(out,mm=i)
+temp<-get_bss_month(out,mm=i,rl)
 bss_out[,i]<-temp[,1]
 bss_out[,(9+i)]<-temp[,2]
 }
