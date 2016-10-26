@@ -77,18 +77,18 @@ plot_forecast(Rnr,Hnr,Syear,Smonth,flood_values,ptype="spaghetti",fpath=NetCDFfo
 Evaluate the performance of the scenarios using standard verification tools and verification metricsRnr
 
 Returns: 
-1. crps, crpss
-2. For mean 5-years and 50 years floods the Brier score, the Brier skill score and the, ROC-area 
-3. For the median ensemble: rmse, correlation and Reff
+* crps, crpss
+* For mean 5-years and 50 years floods the Brier score, the Brier skill score and the, ROC-area 
+* For the median ensemble: rmse, correlation and Reff
 
-
-Rnr is Regine area
-Hnr is main number
-Smonth is the issue month		
-flood_values is a matrix with estimated mean, 5-years and 50 years floods for observations and for HBV simulations		
-qtrans is a matrix with the parameters for transforming the scenarios. Created by 'create_transformations'
-fpath is the path to where the forecast NetCDF files are stored
-mplot is TRUE for showing evaluation plots.
+Arguments:
+* Rnr is Regine area
+* Hnr is main number
+* Smonth is the issue month		
+* flood_values is a matrix with estimated mean, 5-years and 50 years floods for observations and for HBV simulations		
+* qtrans is a matrix with the parameters for transforming the scenarios. Created by 'create_transformations'
+* fpath is the path to where the forecast NetCDF files are stored
+* mplot is TRUE for showing evaluation plots.
  
 ```R
 Rnr=2
@@ -106,19 +106,19 @@ out<-analyze_forecast(Rnr,Hnr,Smonth,fpath=NetCDFfolder,flood_values,qtrans=NA,m
 Evaluate the performance of the scenarios using standard verification tools and verification metrics
 
 Returns: 
-1. crps, crpss
-2. For mean 5-years and 50 years floods the Brier score, the Brier skill score and the, ROC-area 
-3. For the median ensemble: rmse, correlation and Reff
+* crps, crpss
+* For mean 5-years and 50 years floods the Brier score, the Brier skill score and the, ROC-area 
+* For the median ensemble: rmse, correlation and Reff
 
 
-
-Rnr is Regine area
-Hnr is main number
-Smonth is the issue month		
-flood_values is a matrix with estimated mean, 5-years and 50 years floods for observations and for HBV simulations		
-qtrans is a matrix with the parameters for transforming the scenarios. Created by 'create_transformations'
-fpath is the path to where the forecast NetCDF files are stored
-mplot is TRUE for showing evaluation plots.
+Arguments:
+* Rnr is Regine area
+* Hnr is main number
+* Smonth is the issue month		
+* flood_values is a matrix with estimated mean, 5-years and 50 years floods for observations and for HBV simulations		
+* qtrans is a matrix with the parameters for transforming the scenarios. Created by 'create_transformations'
+* fpath is the path to where the forecast NetCDF files are stored
+* mplot is TRUE for showing evaluation plots.
  
 
 

@@ -359,10 +359,10 @@ out
 
 analyse_all<-function(npath,flood_values,qtrans){
 	out_analyze<-list()
-	temp<-matrix(unlist(strsplit(as.character(qtrans[,1]),'.',fixed=TRUE)) ,ncol=5,byrow=TRUE)	
+	temp<-matrix(unlist(strsplit(as.character(qtransform[,1]),'.',fixed=TRUE)) ,ncol=5,byrow=TRUE)[,1:2]
 	for(i in 1 : dim(qtrans)[1]){
 		out_analyze[[i]]<-list() 
-		rnr<-as.integer(temp[i])
+		rnr<-as.integer(temp[i,1])
 		hnr<-as.integer(temp[i,2])		
 		for( j in 1 : 7){
 		print(c(i,j))
@@ -370,6 +370,7 @@ analyse_all<-function(npath,flood_values,qtrans){
 			out_analyze[[i]][[j]]<-analyze_forecast(rnr,hnr,j,fpath=npath,flood_values=flood_values,qtrans=qtrans,mplot=FALSE)
 		}
 	}
+	out_analyze$ndata<-qtransform[,2]
 	names(out_analyze)<-paste(temp[,1],'.',temp[,2],sep='')
 	return(out_analyze)
 }
