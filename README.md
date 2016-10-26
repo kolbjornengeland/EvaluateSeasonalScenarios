@@ -248,3 +248,8 @@ bss_all<-get_bss_all(out=seasonal_evaluation)
 
 Reff_all<-get_Reff_all(out=seasonal_evaluation)
 csi_all<-get_csi_all(out=seasonal_evaluation,1)
+
+
+regimer<-read.table('inst/Regimer_Rett_20_okt.txt',sep=",",header=TRUE
+regimer_s<-regimer[match(paste(rownames(Reff_all),'.0',sep=''),regimer[,4]),]
+
