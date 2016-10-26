@@ -20,15 +20,15 @@ install('RNetCDF')
 install('nsRFA')
 install('SpecsVerification')
 install('verification')
-```R
+```
 
 The data used here is available upon request
 
 ## Preprosessing of files: Creating NCDF files from original text files
 The first step is to create a smalle number of NetCDF files form the original ascii files. 
-filepath is here the path where the original files are stored
-qobspath is path to where the observed streamflows are stored
-outpath is here the path where the NetCDF files should be written
+filepath is the path to where the original files are stored
+qobspath is the path to where the observed streamflows are stored
+outpath is the path to where the NetCDF files should be written
 ```R
 filepath<-'X:/Hbv/ScenarioerFou/vf'
 qobspath<-'inst/Disc'
@@ -38,9 +38,9 @@ create_netcdffiles(filepath,outpath)
 
 ## Preprosessing of files: Creating Transformations for flood values
 Fits gumbel distributions to annual maxima of observed and simulated streamflow. Write the parameters to file 
-HBVsim_path is here the path to folder with HBV simulations of streamflow
-Qobs_path is path to where the observed streamflows are stored
-outfile is here the name of the output file
+HBVsim_path is the path to folder with HBV simulations of streamflow
+Qobs_path is the path to where the observed streamflows are stored
+outfile is the name of the output file
 
 ```R
 HBV='inst/Hydra2_6004'
@@ -64,7 +64,7 @@ Syear is year
 ```R
 flood_values<-read.table('inst/flomtabell_ny.txt',sep="")
 qtransform<-read.table("inst/Transformations.txt")
-NetCDFfolder="M:/Dokumenter/Sesongvarsler/"
+NetCDFfolder = "M:/Dokumenter/Sesongvarsler/"
 Rnr=2
 Hnr=11
 Syear=1974
@@ -133,7 +133,7 @@ qtransform_sel<-qtransform_sel[-c(74,94,100),]
 
 seasonal_evaluation<-analyse_all(NetCDFfolder,flood_values,qtransform_sel)
 
-corr_all<-get_corr_all(out=seasonal_evaluation,ndata=qtransform_sel[,2])
+corr_all<-get_corr_all(out=seasonal_evaluation)
 crpss_all<-get_crpss_all(out=seasonal_evaluation)
 roc_all<-get_roc_all(out=seasonal_evaluation,ri=1)
 bss_all<-get_bss_all(out=seasonal_evaluation)
@@ -283,6 +283,18 @@ csi_march<-get_csi_month(out=seasonal_evaluation,mm=3)
 csi_all<-get_csi_all(out=seasonal_evaluation,1)
 ```
 
-regimer<-read.table('inst/Regimer_Rett_20_okt.txt',sep=",",header=TRUE
+## Analyzing with respect to hydrological regimes:
+
+```R
+regimer<-read.table('inst/Regimer_Rett_20_okt.txt',sep=",",header=TRUE)
 regimer_s<-regimer[match(paste(rownames(Reff_all),'.0',sep=''),regimer[,4]),]
+
+boxplot(corr_all[,8]~regimer_s[,2])
+boxplot(Reff_all[,8]~regimer_s[,2])
+boxplot(crpss_all[,8]~regimer_s[,2])
+boxplot(bss_all[,8]~regimer_s[,2])
+boxplot(csi_all[,8]~regimer_s[,2])
+boxplot(roc_all[,8]~regimer_s[,2])
+```
+
 

@@ -371,39 +371,42 @@ analyse_all<-function(npath,flood_values,qtrans){
 			out_analyze[[i]][[j]]<-analyze_forecast(rnr,hnr,j,fpath=npath,flood_values=flood_values,qtrans=qtrans,mplot=FALSE)
 		}
 	}
-	out_analyze$ndata<-qtrans[,2]
 	names(out_analyze)<-paste(temp[,1],'.',temp[,2],sep='')
+    out_analyze$ndata<-qtrans[,2]
 	return(out_analyze)
 }
 
 
 
 
-get_corr_month<-function(out,ndata,mm){
-corr_all<-rep(NA,length(out))
-for(i in 1 : length(out))
+get_corr_month<-function(out,mm){
+ncc<-(length(out)-1)
+corr_all<-rep(NA,ncc)
+ndata<-out[[ncc+1]]
+for(i in 1 : ncc)
 corr_all[i]<- out[[i]][[mm]]$corr
 # Beregner t-value:
 tt<-abs(qt(0.05,ndata-2))
 #beregner kritisk verdi for korrelasjon
 rr= tt/sqrt(ndata-2+tt^2)
 cout<-cbind(corr_all,rr)
-rownames(cout)<-names(out)
+rownames(cout)<-names(out)[1:ncc]
 return(cout)
 }
 
 
 
-get_corr_all<-function(out,ndata){
-corr_out<-matrix(NA,ncol=10,nrow=length(out))
+get_corr_all<-function(out){
+ncc<-(length(out)-1)
+corr_out<-matrix(NA,ncol=10,nrow=ncc)
 colnames(corr_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_corr','Month','R_sig')
-rownames(corr_out)<-names(out)
+rownames(corr_out)<-names(out)[1:ncc]
 for(i in 1 : 7){
-corr_out[,i]<-get_corr_month(out,ndata,i)[,1]
+corr_out[,i]<-get_corr_month(out,i)[,1]
 }
 corr_out[,8]<-apply(corr_out[,1:7],1,max)
 corr_out[,9]<-apply(corr_out[,1:7],1,which.max)
-corr_out[,10]<-get_corr_month(out,ndata,1)[2,]
+corr_out[,10]<-get_corr_month(out,1)[2,]
 return(corr_out)
 }
 
@@ -412,19 +415,21 @@ return(corr_out)
 
 
 get_Reff_month<-function(out,mm){
-Reff_all<-rep(NA,length(out))
-for(i in 1 : length(out))
+ncc<-(length(out)-1)
+Reff_all<-rep(NA,ncc)
+for(i in 1 : ncc)
 Reff_all[i]<- out[[i]][[mm]]$Reff
-names(Reff_all)<-names(out)
+names(Reff_all)<-names(out)[1:ncc]
 return(Reff_all)
 }
 
 
 
 get_Reff_all<-function(out,ndata){
-Reff_out<-matrix(NA,ncol=9,nrow=length(out))
+ncc<-(length(out)-1)
+Reff_out<-matrix(NA,ncol=9,nrow=ncc)
 colnames(Reff_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_Reff','Month')
-rownames(Reff_out)<-names(out)
+rownames(Reff_out)<-names(out)[1:ncc]
 for(i in 1 : 7){
 Reff_out[,i]<-get_Reff_month(out,i)
 }
@@ -441,19 +446,21 @@ return(Reff_out)
 
 
 get_csi_month<-function(out,mm,ri){
-csi_all<-rep(NA,length(out))
-for(i in 1 : length(out))
+ncc<-(length(out)-1)
+csi_all<-rep(NA,ncc)
+for(i in 1 : ncc)
 csi_all[i]<- out[[i]][[mm]]$csi[ri]
-names(csi_all)<-names(out)
+names(csi_all)<-names(out)[1:ncc]
 return(csi_all)
 }
 
 
 
 get_csi_all<-function(out,ri){
-csi_out<-matrix(NA,ncol=9,nrow=length(out))
+ncc<-(length(out)-1)
+csi_out<-matrix(NA,ncol=9,nrow=ncc)
 colnames(csi_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_csi','Month')
-rownames(csi_out)<-names(out)
+rownames(csi_out)<-names(out)[1:ncc]
 for(i in 1 : 7){
 csi_out[,i]<-get_csi_month(out,i,ri)
 }
@@ -473,20 +480,24 @@ return(csi_out)
 
 
 
-get_crpss_month<-function(out,mm,rl){
-crpss_all<-matrix(NA,ncol=2,nrow=length(out)) 
- for(i in 1 : length(out)) {
+get_crpss_month<-function(out,mm){
+ncc<-(length(out)-1)
+rl<-out[[ncc+1]]
+crpss_all<-matrix(NA,ncol=2,nrow=ncc) 
+ for(i in 1 : ncc) {
  crpss_all[i,1]<- out[[i]][[mm]]$crpss$crpss
- crpss_all[i,2]<- pt(crpss_out[i,1]/out[[i]][[mm]]$crpss$crpss.sigma,df=rl-1,lower.tail=FALSE)
+ crpss_all[i,2]<- pt(crpss_all[i,1]/out[[i]][[mm]]$crpss$crpss.sigma,df=rl[i]-1,lower.tail=FALSE)
  
 }
+rownames(crpss_all)<-names(out)[1:ncc]
  return(crpss_all)
 }
 
-get_crpss_all<-function(out,rl){
-crpss_out<-matrix(NA,ncol=17,nrow=length(out))
+get_crpss_all<-function(out){
+ncc<-(length(out)-1)
+crpss_out<-matrix(NA,ncol=17,nrow=ncc)
 colnames(crpss_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_crpss','Month','P_Jan','P_Feb','P_Mar','P_Apr','P_Mai','P_Jun','P_Jul','P_all')
-rownames(crpss_out)<-names(out)
+rownames(crpss_out)<-names(out)[1:ncc]
 for(i in 1 : 7){
 temp<-get_crpss_month(out,mm=i)
 crpss_out[,i]<-temp[,1]
@@ -494,7 +505,7 @@ crpss_out[,(9+i)]<-temp[,2]
 }
 crpss_out[,8]<-apply(crpss_out[,1:7],1,max)
 crpss_out[,9]<-apply(crpss_out[,1:7],1,which.max)
-crpss_out[,17]<-sapply(c(1:length(out)),FUN=function(i){return(crpss_out[i,crpss_out[i,9]+9])})
+crpss_out[,17]<-sapply(c(1:ncc),FUN=function(i){return(crpss_out[i,crpss_out[i,9]+9])})
 return(crpss_out)
 }
 
@@ -504,9 +515,10 @@ return(crpss_out)
 
 
 get_roc_month<-function(out,mm,ri){
-roc_out<-matrix(NA,ncol=2,nrow=length(out)) 
-rownames(roc_out)<-names(out)
- for(i in 1 : length(out)) {
+ncc<-(length(out)-1)
+roc_out<-matrix(NA,ncol=2,nrow=ncc) 
+rownames(roc_out)<-names(out)[1:ncc]
+ for(i in 1 : ncc) {
  roc_out[i,1]<- out[[i]][[mm]]$roc_area[ri]
  roc_out[i,2]<- out[[i]][[mm]]$roc_pvalue[ri]
 }
@@ -516,9 +528,10 @@ rownames(roc_out)<-names(out)
 
 
 get_roc_all<-function(out,ri){
-roc_out<-matrix(NA,ncol=17,nrow=length(out))
+ncc<-(length(out)-1)
+roc_out<-matrix(NA,ncol=17,nrow=ncc)
 colnames(roc_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_roc','Month','P_Jan','P_Feb','P_Mar','P_Apr','P_Mai','P_Jun','P_Jul','Sig_all')
-rownames(roc_out)<-names(out)
+rownames(roc_out)<-names(out)[1:ncc]
 for(i in 1 : 7){
 temp<-get_roc_month(out,mm=i,ri)
 roc_out[,i]<-temp[,1]
@@ -526,37 +539,40 @@ roc_out[,(9+i)]<-temp[,2]
 }
 roc_out[,8]<-apply(roc_out[,1:7],1,max)
 roc_out[,9]<-apply(roc_out[,1:7],1,which.max)
-roc_out[,17]<-sapply(c(1:length(out)),FUN=function(i){return(roc_out[i,roc_out[i,9]+9])})
+roc_out[,17]<-sapply(c(1:ncc),FUN=function(i){return(roc_out[i,roc_out[i,9]+9])})
 return(roc_out)
 }
 
 
 
 
-get_bss_month<-function(out,mm,rl){
-bss_out<-matrix(NA,ncol=2,nrow=length(out)) 
-rownames(bss_out)<-names(out)
- for(i in 1 : length(out)) {
+get_bss_month<-function(out,mm){
+ncc<-(length(out)-1)
+rl<-out[[ncc+1]]
+bss_out<-matrix(NA,ncol=2,nrow=ncc) 
+rownames(bss_out)<-names(out)[1:ncc]
+ for(i in 1 : ncc) {
  bss_out[i,1]<- out[[i]][[mm]]$brierss_qmean$bss
- bss_out[i,2]<- pt(bss_out[i,1]/out[[i]][[mm]]$brierss_qmean$bss.sigma,df=rl-1,lower.tail=FALSE)
+ bss_out[i,2]<- pt(bss_out[i,1]/out[[i]][[mm]]$brierss_qmean$bss.sigma,df=rl[i]-1,lower.tail=FALSE)
 }
  return(bss_out)
 }
 
 
 
-get_bss_all<-function(out,rl){
-bss_out<-matrix(NA,ncol=17,nrow=length(out))
+get_bss_all<-function(out){
+ncc<-(length(out)-1)
+bss_out<-matrix(NA,ncol=17,nrow=ncc)
 colnames(bss_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_bss','Month','P_Jan','P_Feb','P_Mar','P_Apr','P_Mai','P_Jun','P_Jul','P_all')
-rownames(bss_out)<-names(out)
+rownames(bss_out)<-names(out)[1:ncc]
 for(i in 1 : 7){
-temp<-get_bss_month(out,mm=i,rl)
+temp<-get_bss_month(out,mm=i)
 bss_out[,i]<-temp[,1]
 bss_out[,(9+i)]<-temp[,2]
 }
 bss_out[,8]<-apply(bss_out[,1:7],1,max,na.rm=TRUE)
 bss_out[,9]<-apply(bss_out[,1:7],1,which.max)
-bss_out[,17]<-sapply(c(1:length(out)),FUN=function(i){return(bss_out[i,bss_out[i,9]+9])})
+bss_out[,17]<-sapply(c(1:ncc),FUN=function(i){return(bss_out[i,bss_out[i,9]+9])})
 return(bss_out)
 }
 
