@@ -7,7 +7,7 @@ R package for evaluation seasonal scenarios givn by the HBV model at NVE. This i
 Download the *.R files into your own directory and 'source' them:
 
 ```R
-setwd('C:/Users/koe/Documents/EvaluateSeasonalScenarios/')
+setwd('C:/Users/Svein Tore/Documents/EvaluateSeasonalScenarios/')
 source('databasefunctions.R')
 source('Seasonal_analysis_functions.R')
 source('creating_transformations.R')
