@@ -42,11 +42,17 @@ qsim_sel_t<-qsim_sel
 tnumbers<-matrix(unlist(strsplit(as.character(qtrans[,1]),'.',fixed=TRUE)),ncol=5,byrow=TRUE)
 i2<-which(as.integer(tnumbers[,1])==rnr & as.integer(tnumbers[,2])==hnr)
 parsel<-as.numeric(qtrans[i2,3:6])
-
+tdist=qtrans[,7]
 for(m in 1:simdim[1]){
 for(n in 1:simdim[2]){
+if(tdist=='gumbel'){
 FF1<-nsRFA::F.gumb(qsim_sel[m,n],parsel[3],parsel[4])
 qsim_sel_t[m,n]<-nsRFA::invF.gumb (FF1,parsel[1], parsel[2])
+}
+if(tdist=='gamma'){
+FF1<-pgamma(qsim_sel[m,n],parsel[3],parsel[4])
+qsim_sel_t[m,n]<-qgamma(FF1,parsel[1], parsel[2])
+}
 }
 }
 
@@ -228,11 +234,17 @@ qsim_sel_t<-maxvalues_sim
 tnumbers<-matrix(unlist(strsplit(as.character(qtrans[,1]),'.',fixed=TRUE)),ncol=5,byrow=TRUE)
 i2<-which(as.integer(tnumbers[,1])==rnr & as.integer(tnumbers[,2])==hnr)
 parsel<-as.numeric(qtrans[i2,3:6])
-
+tdist=qtrans[i2,7]
 for(m in 1:simdim[1]){
 for(n in 1:simdim[2]){
+if(tdist=='gumbel'){
 FF1<-nsRFA::F.gumb(maxvalues_sim[m,n],parsel[3],parsel[4])
-qsim_sel_t[m,n]<-nsRFA::invF.gumb (FF1,parsel[1], parsel[2])
+qsim_sel_t[m,n]<-nsRFA::invF.gumb(FF1,parsel[1], parsel[2])
+}
+if(tdist=='gamma'){
+FF1<-pgamma(maxvalues_sim[m,n],parsel[3],parsel[4])
+qsim_sel_t[m,n]<-qgamma(FF1,parsel[1], parsel[2])
+}
 }
 }
 
