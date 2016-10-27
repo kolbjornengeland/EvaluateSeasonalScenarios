@@ -1,9 +1,14 @@
 
 
-create_transformations<-function(HBVsim_path='inst/Hydra2_6004',Qobs_path='inst/Disc',outfile='inst/Transformations.txt') {
+create_transformations<-function(HBVsim_path='inst/Hydra2_6004',Qobs_path='inst/Disc',outfile='inst/Transformations.txt',tdist='gumbel') {
   if (!require('nsRFA')) {
     stop('The package nsRFA was not installed')
   }
+  
+    if (!require('fitdistrplus')) {
+    stop('The package fitdistrplus was not installed')
+  }
+  
   
 #filepath<-('E:/SveinTore/Hydra2_6004')
 stations<-list.files(HBVsim_path)
@@ -21,27 +26,40 @@ param_qsim<-matrix(ncol=2,nrow=dim.stations)
 param_qobs<-matrix(ncol=2,nrow=dim.stations)
 
 for(i in 1 : dim.stations){
-
+print(i)
+print(stations[i])
 qsim<-read.table(paste(HBVsim_path,'/',stations[i],sep=''),header=FALSE,skip=8)
 years<-substr(qsim[,1],1,4)
-ams_qsim<- by(qsim[,2],years,max)
-ams_qsim_lmom <- Lmoments(ams_qsim)
-param_qsim[i,] <- as.numeric(par.gumb(ams_qsim_lmom[1],ams_qsim_lmom[2]))
-
 qfile<-paste(Qobs_path,'/q.',rnr[i],'~1.',hnr[i],sep='')
 qobs<-read.table(qfile,header=FALSE)
 qobs<-qobs[qobs[,2]>0.0,]
 years_obs<-substr(qobs[,1],1,4)
-ams_qobs<- by(qobs[,2],years_obs,max)
-ams_ll<- as.numeric(by(qobs[,2],years_obs,length))
-ams_qobs<-ams_qobs[ams_ll>364]
-nobs[i]<-length(ams_qobs)
+years_ll<- as.numeric(by(qobs[,2],years_obs,length))
+years_u<-unique(years_obs)
+years_sel<-years_u[years_ll>364]
+qobs<-qobs[years_obs%in%years_sel,]
+years_obs<-substr(qobs[,1],1,4)
+nobs[i]<-length(years_sel)
 
+if(tdist=='gumbel'){
+ams_qsim<- by(qsim[,2],years,max)
+ams_qsim_lmom <- Lmoments(ams_qsim)
+param_qsim[i,] <- as.numeric(par.gumb(ams_qsim_lmom[1],ams_qsim_lmom[2]))
+ams_qobs<- by(qobs[,2],years_obs,max)
 ams_qobs_lmom <- Lmoments(ams_qobs)
 param_qobs[i,] <- as.numeric(par.gumb(ams_qobs_lmom[1],ams_qobs_lmom[2]))
+}
+
+if(tdist=='gamma'){
+gfit<-fitdist(qsim[,2], "gamma",method='qme',probs=c(0.5,0.999))
+param_qsim[i,] <- as.numeric(gfit$estimate)
+gfit<-fitdist(qobs[,2], "gamma")
+param_qobs[i,] <- as.numeric(gfit$estimate,method='qme',probs=c(0.5,0.999))
+}
+
 
 }
 
-write.table(cbind(stations,nobs,param_qobs,param_qsim),file=outfile)
+write.table(cbind(stations,nobs,param_qobs,param_qsim,tdist),file=outfile)
 
 }
