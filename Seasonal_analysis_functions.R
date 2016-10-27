@@ -406,7 +406,7 @@ corr_out[,i]<-get_corr_month(out,i)[,1]
 }
 corr_out[,8]<-apply(corr_out[,1:7],1,max)
 corr_out[,9]<-apply(corr_out[,1:7],1,which.max)
-corr_out[,10]<-get_corr_month(out,1)[2,]
+corr_out[,10]<-get_corr_month(out,1)[,2]
 return(corr_out)
 }
 
