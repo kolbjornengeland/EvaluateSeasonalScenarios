@@ -45,8 +45,11 @@ outfile is the name of the output file
 ```R
 HBV='inst/Hydra2_6004'
 Qobs='inst/Disc'
-outf='inst/Transformations.txt'
-create_transformations(HBV,Qobs,outf)
+outf='inst/Transformations_gumbel.txt'
+create_transformations(HBV,Qobs,outf,tdist='gumbel')
+
+outf='inst/Transformations_gamma.txt'
+create_transformations(HBV,Qobs,outf,tdist='gamma')
 ```
 
 
@@ -96,7 +99,7 @@ Rnr=2
 Hnr=11
 Smonth=4
 flood_values<-read.table('inst/flomtabell_ny.txt',sep="")
-qtransform<-read.table("inst/Transformations.txt")
+qtransform<-read.table("inst/Transformations_gumbel.txt")
 NetCDFfolder="M:/Dokumenter/Sesongvarsler/"
 
 out<-analyze_forecast(Rnr,Hnr,Smonth,fpath=NetCDFfolder,flood_values,qtrans=NA,mplot=TRUE)
@@ -126,12 +129,12 @@ Also provided: scripts for organising evaluation scores into matrixes
 ```R
 NetCDFfolder="M:/Dokumenter/Sesongvarsler/"
 flood_values<-read.table('inst/flomtabell_ny.txt',sep="")
-qtransform<-read.table("inst/Transformations.txt")
+qtransform<-read.table("inst/Transformations_gumbel.txt")
 qtransform_sel<-qtransform[qtransform[,2]>30,]
 # Hack. need to exclude 22.16, 41.1 and 55.5 for the moment. Problems with missing data for scenarios,
 qtransform_sel<-qtransform_sel[-c(74,94,100),]
 
-seasonal_evaluation<-analyse_all(NetCDFfolder,flood_values,qtransform_sel)
+seasonal_evaluation_gamma<-analyse_all(NetCDFfolder,flood_values,qtransform_sel)
 
 corr_all<-get_corr_all(out=seasonal_evaluation)
 crpss_all<-get_crpss_all(out=seasonal_evaluation)
@@ -152,7 +155,7 @@ ndata is the number of data used for evaluation. Necessary for calculating signi
 mm is the month
 
 ```R
-corr_march<-get_corr_month(out=seasonal_evaluation,ndata=qtransform_sel[,2],mm=3)
+corr_march<-get_corr_month(out=seasonal_evaluation,mm=3)
 ```
 
 
@@ -164,7 +167,7 @@ out is the output from 'analyse_all'
 ndata is the number of data used for evaluation. Necessary for calculating significance of correlation
 
 ```R
-corr_all<-get_corr_all(out=seasonal_evaluation,ndata=qtransform_sel[,2])
+corr_all<-get_corr_all(out=seasonal_evaluation)
 ```
 
 
