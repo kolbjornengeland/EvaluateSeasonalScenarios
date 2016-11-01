@@ -51,10 +51,10 @@ param_qobs[i,] <- as.numeric(par.gumb(ams_qobs_lmom[1],ams_qobs_lmom[2]))
 }
 
 if(tdist=='gamma'){
-gfit<-fitdist(qsim[,2], "gamma",method='qme',probs=c(0.5,0.999))
+gfit<-fitdist(qsim[,2], "gamma",method='qme',probs=c(0.7,0.9999))
 param_qsim[i,] <- as.numeric(gfit$estimate)
 gfit<-fitdist(qobs[,2], "gamma")
-param_qobs[i,] <- as.numeric(gfit$estimate,method='qme',probs=c(0.5,0.999))
+param_qobs[i,] <- as.numeric(gfit$estimate,method='qme',probs=c(0.7,0.9999))
 }
 
 
