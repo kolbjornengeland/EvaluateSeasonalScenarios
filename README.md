@@ -66,7 +66,7 @@ Syear is year
 
 ```R
 flood_values<-read.table('inst/flomtabell_ny.txt',sep="")
-qtransform<-read.table("inst/Transformations.txt")
+qtransform<-read.table("inst/Transformations_gumbel.txt")
 NetCDFfolder = "M:/Dokumenter/Sesongvarsler/"
 Rnr=2
 Hnr=11
