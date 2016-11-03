@@ -185,6 +185,7 @@ mi=which(smonth==fmonths)
 #si=which(syear!=scenario)
 maxvalues_sim<-matrix(ncol=length(scenario)-1,nrow=length(fyears))
 maxvalues_obs<-rep(NA,length(fyears))
+maxindex_obs<-rep(NA,length(fyears))
 ens.ref<-matrix(ncol=(length(scenario)-1),nrow=length(fyears))
 pp_qmean<-rep(NA,length(fyears))
 pp_q5<-rep(NA,length(fyears))
@@ -207,6 +208,7 @@ maxvalues_sim[i,]<-apply(qsim_sel,1,max,na.rm=TRUE)
 
 if ( any(is.na(qobs_sel))){
 maxvalues_obs[i]<-NA
+maxindex_obs[i]<-NA
 bb_qmean[i]<-NA
 bb_q5[i]<- NA
 bb_q50[i]<- NA
@@ -216,6 +218,7 @@ pp_q50[i]<- NA
 }
 else {
 maxvalues_obs[i]<-max(qobs_sel,na.rm=TRUE)
+maxindex_obs[i]<-which.max(qobs_sel)
 bb_qmean[i]<-as.integer(maxvalues_obs[i]>flood_values[ci,7])
 bb_q5[i]<- as.integer(maxvalues_obs[i]>flood_values[ci,8])
 bb_q50[i]<- as.integer(maxvalues_obs[i]>flood_values[ci,9])
@@ -352,6 +355,7 @@ SpecsVerification::PlotRankhist(out$rankhist)
 }
 out$sim_max<-maxvalues_sim
 out$obs_max<-maxvalues_obs
+out$obs_max_ind<-maxindex_obs
 out$crps<-SpecsVerification::EnsCrps(maxvalues_sim, maxvalues_obs)
 out$brier_qmean<-SpecsVerification::EnsBrier(maxvalues_sim, maxvalues_obs,flood_values[ci,7])
 out$brier_q5<-SpecsVerification::EnsBrier(maxvalues_sim, maxvalues_obs,flood_values[ci,8])
@@ -386,6 +390,52 @@ analyse_all<-function(npath,flood_values,qtrans){
 	names(out_analyze)<-paste(temp[,1],'.',temp[,2],sep='')
     out_analyze$ndata<-qtrans[,2]
 	return(out_analyze)
+}
+
+
+get_mindex_month<-function(out,mm){
+ncc<-(length(out)-1)
+mindex<-rep(NA,ncc)
+for(i in 1 : ncc)
+mindex[i]<- out[[i]][[mm]]$obs_max_ind
+names(mindex)<-names(out)[1:ncc]
+return(mindex)
+}
+
+
+
+get_mindex_all<-function(out,ndata){
+ncc<-(length(out)-1)
+mindex<-matrix(NA,ncol=7,nrow=ncc)
+colnames(mindex)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul')
+rownames(mindex)<-names(out)[1:ncc]
+for(i in 1 : 7){
+mindex[,i]<-get_mindex_month(out,i)
+}
+return(mindex)
+}
+
+
+get_obs_max_month<-function(out,mm){
+ncc<-(length(out)-1)
+obs_max<-rep(NA,ncc)
+for(i in 1 : ncc)
+obs_max[i]<- out[[i]][[mm]]$obs_max
+names(obs_max)<-names(out)[1:ncc]
+return(obs_max)
+}
+
+
+
+get_obs_max_all<-function(out,ndata){
+ncc<-(length(out)-1)
+obs_max<-matrix(NA,ncol=7,nrow=ncc)
+colnames(obs_max)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul')
+rownames(obs_max)<-names(out)[1:ncc]
+for(i in 1 : 7){
+obs_max[,i]<-get_mindex_month(out,i)
+}
+return(obs_max)
 }
 
 
