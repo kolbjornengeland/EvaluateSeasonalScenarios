@@ -396,7 +396,7 @@ get_mindex_month<-function(out,mm){
 ncc<-(length(out)-1)
 mindex<-rep(NA,ncc)
 for(i in 1 : ncc)
-mindex[i]<- out[[i]][[mm]]$obs_max_ind
+mindex[i]<- median(out[[i]][[mm]]$obs_max_ind,na.rm=TRUE)
 names(mindex)<-names(out)[1:ncc]
 return(mindex)
 }
