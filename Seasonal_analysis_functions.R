@@ -416,6 +416,29 @@ return(mindex)
 }
 
 
+get_obs_max_month<-function(out,mm){
+ncc<-(length(out)-1)
+obs_max<-rep(NA,ncc)
+for(i in 1 : ncc)
+obs_max[i]<- out[[i]][[mm]]$obs_max
+names(obs_max)<-names(out)[1:ncc]
+return(obs_max)
+}
+
+
+
+get_obs_max_all<-function(out,ndata){
+ncc<-(length(out)-1)
+obs_max<-matrix(NA,ncol=7,nrow=ncc)
+colnames(obs_max)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul')
+rownames(obs_max)<-names(out)[1:ncc]
+for(i in 1 : 7){
+obs_max[,i]<-get_mindex_month(out,i)
+}
+return(obs_max)
+}
+
+
 
 
 get_corr_month<-function(out,mm){
