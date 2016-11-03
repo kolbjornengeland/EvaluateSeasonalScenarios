@@ -1,5 +1,4 @@
 
-
 plot_forecast<-function(rnr,hnr,syear,smonth,flood_values,ptype="greyshade", fpath="../data/netcdf/",
 qtrans=NA){
 
