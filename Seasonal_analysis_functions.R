@@ -328,12 +328,11 @@ for(j in 1 : 3){
 #Use untransformed ensembles and compare to HBV model flood quantiles
 outcome<-as.integer(maxvalues_obs>flood_values[ci,(3+j)])
 forecasted<-as.integer(apply(maxvalues_sim_o,1,quantile,0.5)>flood_values[ci,(6+j)])
-if(sum(na.omit(outcome))==0){
-roc_area[j] <- 0
-roc_pvalue[j] <- 0
-csi[j]<- -1.0
-}
-else{
+#if(sum(na.omit(outcome))==0)
+#roc_area[j] <- 0
+#roc_pvalue[j] <- 0
+#csi[j]<- -1.0
+
 
 p_flood<-rowMeans(maxvalues_sim_o>flood_values[ci,(6+j)])
 p_flood<-p_flood[!is.na(outcome)]
@@ -344,6 +343,12 @@ outcome<-na.omit(outcome)
 stemp=(sum(outcome) + sum(forecasted&!outcome))
 csi[j]<- (-1.0)
 if(stemp>0) csi[j]=sum(outcome&forecasted) / stemp
+
+if(sum(na.omit(outcome))==0){
+roc_area[j] <- 0.5
+roc_pvalue[j] <- 1.0
+}
+else{
 if(mplot){
 windows(6,6)
 roc_out<-verification::roc.plot(outcome,p_flood,thresholds=seq(0.0,1.0,by=0.1))

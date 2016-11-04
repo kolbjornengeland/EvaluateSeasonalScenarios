@@ -1,3 +1,23 @@
+
+
+
+
+# Read metadata from file:
+ccp<-read.table("Metadata.txt",sep=";",header=TRUE)
+
+# order the catchemnt characteristics to be in the sam order as the output fromthe analyses
+catchment_properties<-ccp[match(names(seasonal_evaluation)[1:(length(seasonal_evaluation)-1)],paste(ccp[,1],'.',ccp[,2],sep='')),]
+
+
+
+
+
+
+
+
+
+#Extracrt metadata for stations:
+
 # installering av pakker
 install.packages("devtools")
 install.packages("curl")
@@ -45,7 +65,7 @@ outfile<-'inst/CID.txt'
 grid_id_example_catchments<-gridcell_list(c_ids=example_stations,c_shape=shapef,snr_translation=snr_t,c_layer=slayer,outfile=outfile)
 
 
-sfile<-'inst/Example_data/Flooddata/Table_stations_periods.csv'
+
 grid_id<-'inst/CID.txt'
 outf<-'inst/metdata/'
 metinf<-get_metdataforfloods(gridid=grid_id,first_day=as.Date("1962/1/1"),last_day=as.Date("2015/12/31"),
