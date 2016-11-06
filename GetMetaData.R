@@ -1,3 +1,23 @@
+
+
+
+
+# Read metadata from file:
+ccp<-read.table("Metadata.txt",sep=";",header=TRUE)
+
+# order the catchemnt characteristics to be in the sam order as the output fromthe analyses
+catchment_properties<-ccp[match(names(seasonal_evaluation)[1:(length(seasonal_evaluation)-1)],paste(ccp[,1],'.',ccp[,2],sep='')),]
+
+
+
+
+
+
+
+
+
+#Extracrt metadata for stations:
+
 # installering av pakker
 install.packages("devtools")
 install.packages("curl")
@@ -10,10 +30,18 @@ library(assertthat)
 
 install_github("NVE/NVEDATA")
 
+install_github("NVE/NVEHYDROTOOLS")
+
+setwd('C:/Users/koe/Documents/EvaluateSeasonalScenarios/')
+source('databasefunctions.R')
+source('Seasonal_analysis_functions.R')
+source('creating_transformations.R')
+
 # The following code returns metadata for all available stations:
 
 library(NVEDATA)
 metadata <- get_metadata()
+
 
 
 # Get the metadata for the flood forecasting stations
@@ -34,4 +62,17 @@ names(metadata_flood_stations)
 reguleringsgrad<-metadata_flood_stations$regulation_part_reservoirs 
 
 
+library(NVEHYDROTOOLS)
+example_stations<-paste(temp[,1],".",temp[,2],".0",sep="")
+shapef <- '//nve/fil/h/HM/Interne Prosjekter/Flomkart/Data/GISData/Hydrologi_TotalNedborfeltMalestasjon.shp'
+slayer<- 'Hydrologi_TotalNedborfeltMalestasjon'
+snr_t="C:/Users/koe/Documents/Flomkart/NVEHYDROTOOLS/inst/Complete_data/CatchmentCharacteristics/Feltnr_flomkart_til_feltnr_GIS.txt"
+outfile<-'inst/CID.txt'
+grid_id_example_catchments<-gridcell_list(c_ids=example_stations,c_shape=shapef,snr_translation=snr_t,c_layer=slayer,outfile=outfile)
 
+
+
+grid_id<-'inst/CID.txt'
+outf<-'inst/metdata/'
+metinf<-get_metdataforfloods(gridid=grid_id,first_day=as.Date("1962/1/1"),last_day=as.Date("2015/12/31"),
+station_file=NA,metfolder="U:/metdata/met_obs_v2.1/",snowfolder="U:/snowsim/snowsim_v2.0.1/",hbvfolder="Z:/gwbsim/",outfolder=outf)
