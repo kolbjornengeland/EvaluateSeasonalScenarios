@@ -1,7 +1,13 @@
 # installering av pakker
 install.packages("devtools")
 install.packages("curl")
+install.packages("Rcpp")
+install.packages("DBI")
+install.packages("assertthat")
 library(devtools)
+library(DBI)
+library(assertthat)
+
 install_github("NVE/NVEDATA")
 
 # The following code returns metadata for all available stations:
