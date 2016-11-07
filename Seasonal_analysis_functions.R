@@ -497,7 +497,7 @@ obs_max<-matrix(NA,ncol=7,nrow=ncc)
 colnames(obs_max)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul')
 rownames(obs_max)<-names(out)[1:ncc]
 for(i in 1 : 7){
-obs_max[,i]<-get_mindex_month(out,i)
+obs_max[,i]<-get_obs_max_month(out,i)
 }
 return(obs_max)
 }
