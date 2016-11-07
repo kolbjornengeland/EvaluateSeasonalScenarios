@@ -244,7 +244,7 @@ bb_ensmean<-ens.ref
 bb_ensq5<-ens.ref
 bb_ensq50<-ens.ref
 
-print(dim(bb_ensmean))
+#print(dim(bb_ensmean))
 for(i in 1 : length(fyears)){
 if(is.na(bb_qmean[i])){
 ens.ref[i,]<-NA
@@ -261,7 +261,7 @@ bb_ensq50[i,]<- ens.ref[i,]>flood_values[ci,6]
 }
 }
 
-print(dim(bb_ensmean))
+#print(dim(bb_ensmean))
 
 bb_qsimmean<-bb_qsimmean[!is.na(maxvalues_obs),]
 bb_qsimq5<-bb_qsimq5[!is.na(maxvalues_obs),]
@@ -345,7 +345,7 @@ csi[j]<- (-1.0)
 if(stemp>0) csi[j]=sum(outcome&forecasted) / stemp
 
 if(sum(na.omit(outcome))==0){
-roc_area[j] <- 0.5
+roc_area[j] <- -0.5
 roc_pvalue[j] <- 1.0
 }
 else{
