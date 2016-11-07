@@ -30,7 +30,7 @@ ARRatio<-Arain/Aprec
 Wprec<-colMeans(Mprec[c(1,2,3,4,11,12),])
 Wrain<-colMeans(Mrain[c(1,2,3,4,11,12),])
 Wtemp<-colMeans(Mtemp[c(1,2,3,4,11,12),])
-WSZ<-colMeans(NSubZero[c(1,2,3,4,11,12),])
+WSZ<-colSums(NSubZero[c(1,2,3,4,11,12),])/(30+31+31+28.25+31+30)
 
 # Ratio rain precipitation
 WRRatio<-Wrain/Wprec
