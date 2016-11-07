@@ -10,13 +10,61 @@ catchment_properties<-ccp[match(names(seasonal_evaluation)[1:(length(seasonal_ev
 
 
 
+# Exctracting climate characteristics
+Mprec<-read.table('inst/metdata/SaveP.txt',header=TRUE,row.names=1,check.names = FALSE)
+Mrain<-read.table('inst/metdata/SaveR.txt',header=TRUE,row.names=1,check.names = FALSE)
+Mtemp<-read.table('inst/metdata/SaveT.txt',header=TRUE,row.names=1,check.names = FALSE)
+NSubZero<-read.table("inst/metdata/SubZero.txt",check.names = FALSE) 
+
+
+# Annual values
+Aprec<-colMeans(Mprec)
+Arain<-colMeans(Mrain)
+Atemp<-colMeans(Mtemp)
+ASZ<-colSums(NSubZero)
+
+# Ratio rain precipitation
+ARRatio<-Arain/Aprec
+
+# Winter values (November - April)
+Wprec<-colMeans(Mprec[c(1,2,3,4,11,12),])
+Wrain<-colMeans(Mrain[c(1,2,3,4,11,12),])
+Wtemp<-colMeans(Mtemp[c(1,2,3,4,11,12),])
+WSZ<-colMeans(NSubZero[c(1,2,3,4,11,12),])
+
+# Ratio rain precipitation
+WRRatio<-Wrain/Wprec
 
 
 
 
 
 
-#Extracrt metadata for stations:
+##########################################################################################
+
+Scripts below are for preparing metadata
+
+##########################################################################################
+
+
+# Reading daily values
+Dtemp<-read.table('inst/metdata/DailyValues/aveT.txt',header=TRUE,row.names=1,check.names = FALSE)
+Mdates<-rownames(Dtemp)
+Myears<-substr(Mdates,1,4)
+Mmonth<-substr(Mdates,6,7)
+
+# Number of days with sub-zero average temperature
+Dtemp_binary<-(Dtemp<=0.0)
+Nmonthly<-apply(Dtemp_binary,2,FUN=by,Mmonth,sum)/length(unique(Myears))
+write.table(Nmonthly,"inst/SubZero.txt") 
+
+
+
+
+
+
+
+#Extract metadata for stations:
 
 # installering av pakker
 install.packages("devtools")
