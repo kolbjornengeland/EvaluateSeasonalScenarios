@@ -42,7 +42,7 @@ WRRatio<-Wrain/Wprec
 
 ##########################################################################################
 
-Scripts below are for preparing metadata
+#Scripts below are for preparing metadata
 
 ##########################################################################################
 
