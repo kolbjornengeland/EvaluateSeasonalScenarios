@@ -185,6 +185,7 @@ mi=which(smonth==fmonths)
 #si=which(syear!=scenario)
 maxvalues_sim<-matrix(ncol=length(scenario)-1,nrow=length(fyears))
 maxvalues_obs<-rep(NA,length(fyears))
+maxindex_obs<-rep(NA,length(fyears))
 ens.ref<-matrix(ncol=(length(scenario)-1),nrow=length(fyears))
 pp_qmean<-rep(NA,length(fyears))
 pp_q5<-rep(NA,length(fyears))
@@ -192,6 +193,11 @@ pp_q50<-rep(NA,length(fyears))
 bb_qmean<-rep(NA,length(fyears))
 bb_q5<-rep(NA,length(fyears))
 bb_q50<-rep(NA,length(fyears))
+bb_qsimmean<-maxvalues_sim
+bb_qsimq5<-maxvalues_sim
+bb_qsimq50<-maxvalues_sim
+
+
 
 #Pthresholds<-c(0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.95)
 #False_alarm_rate<-matrix(ncol=length(Pthresholds),nrow=3)
@@ -204,30 +210,84 @@ qobs_sel<-qobs[i,mi,1:lmax]
 qsim_sel<-qsim[i,mi,si,1:lmax]
 maxvalues_sim[i,]<-apply(qsim_sel,1,max,na.rm=TRUE)
 
-
 if ( any(is.na(qobs_sel))){
 maxvalues_obs[i]<-NA
+maxindex_obs[i]<-NA
 bb_qmean[i]<-NA
 bb_q5[i]<- NA
 bb_q50[i]<- NA
 pp_qmean[i]<-NA
 pp_q5[i]<- NA
 pp_q50[i]<- NA
+bb_qsimmean[i,]<-NA
+bb_qsimq5[i,]<-NA
+bb_qsimq50[i,]<-NA
 }
 else {
 maxvalues_obs[i]<-max(qobs_sel,na.rm=TRUE)
-bb_qmean[i]<-as.integer(maxvalues_obs[i]>flood_values[ci,7])
-bb_q5[i]<- as.integer(maxvalues_obs[i]>flood_values[ci,8])
-bb_q50[i]<- as.integer(maxvalues_obs[i]>flood_values[ci,9])
+maxindex_obs[i]<-which.max(qobs_sel)
+bb_qmean[i]<-as.integer(maxvalues_obs[i]>flood_values[ci,4])
+bb_q5[i]<- as.integer(maxvalues_obs[i]>flood_values[ci,5])
+bb_q50[i]<- as.integer(maxvalues_obs[i]>flood_values[ci,6])
 pp_qmean[i]<-mean(maxvalues_sim[i,]>flood_values[ci,7])
 pp_q5[i]<- mean(maxvalues_sim[i,]>flood_values[ci,8])
 pp_q50[i]<- mean(maxvalues_sim[i,]>flood_values[ci,9])
+bb_qsimmean[i,]<-maxvalues_sim[i,]>flood_values[ci,7]
+bb_qsimq5[i,]<- maxvalues_sim[i,]>flood_values[ci,8]
+bb_qsimq50[i,]<- maxvalues_sim[i,]>flood_values[ci,9]
 }
 
 }
 
+ens.ref<-matrix(ncol=(length(na.omit(maxvalues_obs))-1),nrow=length(fyears))
+bb_ensmean<-ens.ref
+bb_ensq5<-ens.ref
+bb_ensq50<-ens.ref
+
+#print(dim(bb_ensmean))
+for(i in 1 : length(fyears)){
+if(is.na(bb_qmean[i])){
+ens.ref[i,]<-NA
+bb_ensmean[i,]<-NA
+bb_ensq5[i,]<-NA
+bb_ensq50[i,]<-NA
+}
+else{
+si=which(fyears[i]!=scenario)
+ens.ref[i,]<-as.numeric(na.omit(maxvalues_obs[si]))
+bb_ensmean[i,]<-ens.ref[i,]>flood_values[ci,4]
+bb_ensq5[i,]<- ens.ref[i,]>flood_values[ci,5]
+bb_ensq50[i,]<- ens.ref[i,]>flood_values[ci,6]
+}
+}
+
+#print(dim(bb_ensmean))
+
+bb_qsimmean<-bb_qsimmean[!is.na(maxvalues_obs),]
+bb_qsimq5<-bb_qsimq5[!is.na(maxvalues_obs),]
+bb_qsimq50<-bb_qsimq50[!is.na(maxvalues_obs),]
+
+bb_ensmean<-bb_ensmean[!is.na(maxvalues_obs),]
+bb_ensq5<-bb_ensq5[!is.na(maxvalues_obs),]
+bb_ensq50<-bb_ensq50[!is.na(maxvalues_obs),]
 
 
+bb_ensmean<-bb_ensmean[,!is.na(bb_ensmean[1,])]
+bb_ensq5<-bb_ensq5[,!is.na(bb_ensmean[1,])]
+bb_ensq50<-bb_ensq50[,!is.na(bb_ensmean[1,])]
+
+
+
+
+bb_qmean<-bb_qmean[!is.na(maxvalues_obs)]
+bb_q5<-bb_q5[!is.na(maxvalues_obs)]
+bb_q50<-bb_q50[!is.na(maxvalues_obs)]
+pp_qmean<-pp_qmean[!is.na(maxvalues_obs)]
+pp_q5<-pp_q5[!is.na(maxvalues_obs)]
+pp_q50<-pp_q50[!is.na(maxvalues_obs)]
+
+
+maxvalues_sim_o<-maxvalues_sim
 if(any(!is.na(qtrans))){
 simdim<-dim(maxvalues_sim)
 qsim_sel_t<-maxvalues_sim
@@ -247,14 +307,9 @@ qsim_sel_t[m,n]<-qgamma(FF1,parsel[1], parsel[2])
 }
 }
 }
-
 maxvalues_sim<-qsim_sel_t
 }
 
-for(i in 1 : length(fyears)){
-si=which(fyears[i]!=scenario)
-ens.ref[i,]<-maxvalues_obs[si]
-}
 
 
 
@@ -270,16 +325,16 @@ for(j in 1 : 3){
 #print(dim(maxvalues_sim))
 #print(length(maxvalues_obs))
 #print(apply(maxvalues_sim,1,quantile,0.5))
+#Use untransformed ensembles and compare to HBV model flood quantiles
 outcome<-as.integer(maxvalues_obs>flood_values[ci,(3+j)])
-forecasted<-as.integer(apply(maxvalues_sim,1,quantile,0.5)>flood_values[ci,(3+j)])
-if(sum(na.omit(outcome))==0){
-roc_area[j] <- 0
-roc_pvalue[j] <- 0
-csi[j]<- -1.0
-}
-else{
+forecasted<-as.integer(apply(maxvalues_sim_o,1,quantile,0.5)>flood_values[ci,(6+j)])
+#if(sum(na.omit(outcome))==0)
+#roc_area[j] <- 0
+#roc_pvalue[j] <- 0
+#csi[j]<- -1.0
 
-p_flood<-rowMeans(maxvalues_sim>flood_values[ci,(6+j)])
+
+p_flood<-rowMeans(maxvalues_sim_o>flood_values[ci,(6+j)])
 p_flood<-p_flood[!is.na(outcome)]
 forecasted<-forecasted[!is.na(outcome)]
 outcome<-na.omit(outcome)
@@ -288,6 +343,12 @@ outcome<-na.omit(outcome)
 stemp=(sum(outcome) + sum(forecasted&!outcome))
 csi[j]<- (-1.0)
 if(stemp>0) csi[j]=sum(outcome&forecasted) / stemp
+
+if(sum(na.omit(outcome))==0){
+roc_area[j] <- -0.5
+roc_pvalue[j] <- 1.0
+}
+else{
 if(mplot){
 windows(6,6)
 roc_out<-verification::roc.plot(outcome,p_flood,thresholds=seq(0.0,1.0,by=0.1))
@@ -317,8 +378,8 @@ qsim_5<-apply(maxvalues_sim,1,quantile,0.05)
 qsim_50<-apply(maxvalues_sim,1,quantile,0.5)
 qsim_max<-apply(maxvalues_sim,1,max,na.rm=TRUE)
 
-ssmax<-max(qsim_max,maxvalues_obs)
-ssmin<-min(qsim_5,maxvalues_obs)
+ssmax<-max(qsim_max,maxvalues_obs,na.rm=TRUE)
+ssmin<-min(qsim_5,maxvalues_obs,na.rm=TRUE)
 
 if(mplot){
 windows(8,8)
@@ -326,10 +387,10 @@ plot(maxvalues_obs,qsim_50,xlim=c(ssmin,ssmax),ylim=c(ssmin,ssmax),xlab="Observe
 points(maxvalues_obs,qsim_max,col="red")
 points(maxvalues_obs,qsim_95,col="orange")
 points(maxvalues_obs,qsim_5,col="green")
-legend('bottomright',legend=c(paste("Median scenario cor:",round(cor(maxvalues_obs,qsim_50),2)),
-paste("Maximum scenario cor:",round(cor(maxvalues_obs,qsim_max),2))
-,paste("95% scenariocor:",round(cor(maxvalues_obs,qsim_95),2))
-,paste("5% scenario cor:",round(cor(maxvalues_obs,qsim_5),2)))
+legend('bottomright',legend=c(paste("Median scenario cor:",round(cor(maxvalues_obs,qsim_50,use="pairwise.complete.obs"),2)),
+paste("Maximum scenario cor:",round(cor(maxvalues_obs,qsim_max,use="pairwise.complete.obs"),2))
+,paste("95% scenariocor:",round(cor(maxvalues_obs,qsim_95,use="pairwise.complete.obs"),2))
+,paste("5% scenario cor:",round(cor(maxvalues_obs,qsim_5,use="pairwise.complete.obs"),2)))
 ,col=c(1,"red","orange","green"),pch=c(1,1,1,1))
 abline(0,1)
 
@@ -352,18 +413,26 @@ SpecsVerification::PlotRankhist(out$rankhist)
 }
 out$sim_max<-maxvalues_sim
 out$obs_max<-maxvalues_obs
+out$obs_max_ind<-maxindex_obs
 out$crps<-SpecsVerification::EnsCrps(maxvalues_sim, maxvalues_obs)
-out$brier_qmean<-SpecsVerification::EnsBrier(maxvalues_sim, maxvalues_obs,flood_values[ci,7])
-out$brier_q5<-SpecsVerification::EnsBrier(maxvalues_sim, maxvalues_obs,flood_values[ci,8])
-out$brier_q50<-SpecsVerification::EnsBrier(maxvalues_sim, maxvalues_obs,flood_values[ci,9])
+out$brier_qmean<-SpecsVerification::EnsBrier(bb_qsimmean,bb_qmean,0.5)
+out$brier_q5<-SpecsVerification::EnsBrier(bb_qsimq5,bb_q5,0.5)
+
+out$brier_q50<-SpecsVerification::EnsBrier(bb_qsimq50,bb_q50,0.5)
 qsim_50<-apply(maxvalues_sim,1,quantile,0.5)
 out$rmse<-sqrt(mean((qsim_50-maxvalues_obs)^2))
 out$Reff<-1.0-(mean((qsim_50-maxvalues_obs)^2,na.rm=TRUE)/var(maxvalues_obs,na.rm=TRUE))
 out$corr<-cor(maxvalues_obs,qsim_50,use="pairwise.complete.obs")
 out$crpss<-SpecsVerification::EnsCrpss(maxvalues_sim, ens.ref, maxvalues_obs) 
-out$brierss_qmean<-SpecsVerification::EnsBrierSs(maxvalues_sim, ens.ref, maxvalues_obs,flood_values[ci,7])
-out$brierss_q5<-SpecsVerification::EnsBrierSs(maxvalues_sim, ens.ref, maxvalues_obs,flood_values[ci,8])
-out$brierss_q50<-SpecsVerification::EnsBrierSs(maxvalues_sim, ens.ref, maxvalues_obs,flood_values[ci,9])
+print('test')
+print(dim(bb_ensmean))
+out$brierss_qmean<-SpecsVerification::EnsBrierSs(bb_qsimmean, bb_ensmean, bb_qmean,0.5)
+print('test')
+print(dim(bb_ensq5))
+out$brierss_q5<-SpecsVerification::EnsBrierSs(bb_qsimq5, bb_ensq5, bb_q5,0.5)
+print('test')
+print(dim(bb_ensq50))
+out$brierss_q50<-SpecsVerification::EnsBrierSs(bb_qsimq50, bb_ensq50, bb_q50,0.5)
 out$csi<-csi
 out
 }
@@ -386,6 +455,52 @@ analyse_all<-function(npath,flood_values,qtrans){
 	names(out_analyze)<-paste(temp[,1],'.',temp[,2],sep='')
     out_analyze$ndata<-qtrans[,2]
 	return(out_analyze)
+}
+
+
+get_mindex_month<-function(out,mm){
+ncc<-(length(out)-1)
+mindex<-rep(NA,ncc)
+for(i in 1 : ncc)
+mindex[i]<- median(out[[i]][[mm]]$obs_max_ind,na.rm=TRUE)
+names(mindex)<-names(out)[1:ncc]
+return(mindex)
+}
+
+
+
+get_mindex_all<-function(out,ndata){
+ncc<-(length(out)-1)
+mindex<-matrix(NA,ncol=7,nrow=ncc)
+colnames(mindex)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul')
+rownames(mindex)<-names(out)[1:ncc]
+for(i in 1 : 7){
+mindex[,i]<-get_mindex_month(out,i)
+}
+return(mindex)
+}
+
+
+get_obs_max_month<-function(out,mm){
+ncc<-(length(out)-1)
+obs_max<-rep(NA,ncc)
+for(i in 1 : ncc)
+obs_max[i]<- out[[i]][[mm]]$obs_max
+names(obs_max)<-names(out)[1:ncc]
+return(obs_max)
+}
+
+
+
+get_obs_max_all<-function(out,ndata){
+ncc<-(length(out)-1)
+obs_max<-matrix(NA,ncol=7,nrow=ncc)
+colnames(obs_max)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul')
+rownames(obs_max)<-names(out)[1:ncc]
+for(i in 1 : 7){
+obs_max[,i]<-get_mindex_month(out,i)
+}
+return(obs_max)
 }
 
 

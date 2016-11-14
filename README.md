@@ -66,7 +66,7 @@ Syear is year
 
 ```R
 flood_values<-read.table('inst/flomtabell_ny.txt',sep="")
-qtransform<-read.table("inst/Transformations.txt")
+qtransform<-read.table("inst/Transformations_gumbel.txt")
 NetCDFfolder = "M:/Dokumenter/Sesongvarsler/"
 Rnr=2
 Hnr=11
@@ -113,6 +113,7 @@ Returns:
 * crps, crpss
 * For mean 5-years and 50 years floods the Brier score, the Brier skill score and the, ROC-area 
 * For the median ensemble: rmse, correlation and Reff
+* The number of days after the isue date until the maximum flood peak is observed.
 
 
 Arguments:
@@ -142,6 +143,8 @@ roc_all<-get_roc_all(out=seasonal_evaluation,ri=1)
 bss_all<-get_bss_all(out=seasonal_evaluation)
 Reff_all<-get_Reff_all(out=seasonal_evaluation)
 csi_all<-get_csi_all(out=seasonal_evaluation,1)
+Reff_all<-get_Reff_all(out=seasonal_evaluation)
+mindex_all<-get_mindex_all(out=seasonal_evaluation)
 ```
 
 
