@@ -50,6 +50,8 @@ create_transformations(HBV,Qobs,outf,tdist='gumbel')
 
 outf='inst/Transformations_gamma.txt'
 create_transformations(HBV,Qobs,outf,tdist='gamma')
+
+create_transformations(HBV,Qobs,outf,tdist='empq')
 ```
 
 
@@ -75,6 +77,9 @@ Smonth=4
 plot_forecast(Rnr,Hnr,Syear,Smonth,flood_values,ptype="greyshade",fpath=NetCDFfolder)
 plot_forecast(Rnr,Hnr,Syear,Smonth,flood_values,ptype="greyshade",fpath=NetCDFfolder,qtrans=qtransform)
 plot_forecast(Rnr,Hnr,Syear,Smonth,flood_values,ptype="spaghetti",fpath=NetCDFfolder,qtrans=qtransform)
+
+plot_forecast(Rnr,Hnr,Syear,Smonth,flood_values,ptype="greyshade",fpath=NetCDFfolder,empqt=TRUE)
+plot_forecast(Rnr,Hnr,Syear,Smonth,flood_values,ptype="spaghetti",fpath=NetCDFfolder,empqt=TRUE)
 ```
 
 ## Analysing scenarios for one specific catchment issued at one specific month
@@ -103,6 +108,8 @@ qtransform<-read.table("inst/Transformations_gumbel.txt")
 NetCDFfolder="M:/Dokumenter/Sesongvarsler/"
 
 out<-analyze_forecast(Rnr,Hnr,Smonth,fpath=NetCDFfolder,flood_values,qtrans=NA,mplot=TRUE)
+
+out<-analyze_forecast(Rnr,Hnr,Smonth,fpath=NetCDFfolder,flood_values,qtrans=NA,mplot=TRUE,empqt=TRUE)
 ```
 
 
@@ -135,7 +142,10 @@ qtransform_sel<-qtransform[qtransform[,2]>30,]
 # Hack. need to exclude 22.16, 41.1 and 55.5 for the moment. Problems with missing data for scenarios,
 qtransform_sel<-qtransform_sel[-c(74,94,100),]
 
-seasonal_evaluation_gamma<-analyse_all(NetCDFfolder,flood_values,qtransform_sel)
+seasonal_evaluation<-analyse_all(NetCDFfolder,flood_values,qtransform_sel)
+
+# Empirical quantile transformation
+seasonal_evaluation<-analyse_all(NetCDFfolder,flood_values,qtransform_sel,empqt=TRUE)
 
 corr_all<-get_corr_all(out=seasonal_evaluation)
 crpss_all<-get_crpss_all(out=seasonal_evaluation)
