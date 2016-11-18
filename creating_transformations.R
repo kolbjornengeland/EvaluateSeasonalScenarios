@@ -32,12 +32,14 @@ qsim<-read.table(paste(HBVsim_path,'/',stations[i],sep=''),header=FALSE,skip=8)
 years<-substr(qsim[,1],1,4)
 qfile<-paste(Qobs_path,'/q.',rnr[i],'~1.',hnr[i],sep='')
 qobs<-read.table(qfile,header=FALSE)
+qsim_emp<-qism[qobs[,2]>0.0,]
 qobs<-qobs[qobs[,2]>0.0,]
 years_obs<-substr(qobs[,1],1,4)
 years_ll<- as.numeric(by(qobs[,2],years_obs,length))
 years_u<-unique(years_obs)
 years_sel<-years_u[years_ll>364]
 qobs<-qobs[years_obs%in%years_sel,]
+qsim_emp<-qsim_emp[years_obs%in%years_sel,]
 years_obs<-substr(qobs[,1],1,4)
 nobs[i]<-length(years_sel)
 
@@ -57,7 +59,11 @@ gfit<-fitdist(qobs[,2], "gamma")
 param_qobs[i,] <- as.numeric(gfit$estimate,method='qme',probs=c(0.7,0.9999))
 }
 
+if(tdist=='empq'){
 
+  write.table(cbind(qsim_emp[,2],qobs[,2],file=paste("empq_",rnr,'.',hnr,".txt",sep=''))
+
+}
 }
 
 write.table(cbind(stations,nobs,param_qobs,param_qsim,tdist),file=outfile)

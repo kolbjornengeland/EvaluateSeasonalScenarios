@@ -36,6 +36,17 @@ scenario_si<-scenario[si]
 qobs_sel<-qobs[yi,mi,]
 qsim_sel<-qsim[yi,mi,si,]
 
+if(empqt=TRUE){
+  empv<-read.table(file=paste("empq_",rnr,'.',hnr,".txt",sep=''))  
+  myfun<-approxfun(sort(empv[,1]),sort(empv[,2])
+  for(m in 1:simdim[1]){
+    for(n in 1:simdim[2]){
+        qsim_sel_t[m,n]<-myfun(qsim_sel[m,n])
+    }
+  }
+  
+}
+
 if(any(!is.na(qtrans))){
 simdim<-dim(qsim_sel)
 qsim_sel_t<-qsim_sel
@@ -186,6 +197,8 @@ mi=which(smonth==fmonths)
 maxvalues_sim<-matrix(ncol=length(scenario)-1,nrow=length(fyears))
 maxvalues_obs<-rep(NA,length(fyears))
 maxindex_obs<-rep(NA,length(fyears))
+volumes_sim<-maxvalues_sim
+volumes_obs<-maxvalues_obs
 ens.ref<-matrix(ncol=(length(scenario)-1),nrow=length(fyears))
 pp_qmean<-rep(NA,length(fyears))
 pp_q5<-rep(NA,length(fyears))
@@ -209,10 +222,11 @@ si=which(fyears[i]!=scenario)
 qobs_sel<-qobs[i,mi,1:lmax]
 qsim_sel<-qsim[i,mi,si,1:lmax]
 maxvalues_sim[i,]<-apply(qsim_sel,1,max,na.rm=TRUE)
-
+volumes_sim[i,]<-apply(qsim_sel,1,sum,na.rm=TRUE)
 if ( any(is.na(qobs_sel))){
 maxvalues_obs[i]<-NA
 maxindex_obs[i]<-NA
+volumes_obs[i]<-NA
 bb_qmean[i]<-NA
 bb_q5[i]<- NA
 bb_q50[i]<- NA
@@ -225,6 +239,7 @@ bb_qsimq50[i,]<-NA
 }
 else {
 maxvalues_obs[i]<-max(qobs_sel,na.rm=TRUE)
+volumes_obs[i]<-sum(qobs_sel,na.rm=TRUE)
 maxindex_obs[i]<-which.max(qobs_sel)
 bb_qmean[i]<-as.integer(maxvalues_obs[i]>flood_values[ci,4])
 bb_q5[i]<- as.integer(maxvalues_obs[i]>flood_values[ci,5])
