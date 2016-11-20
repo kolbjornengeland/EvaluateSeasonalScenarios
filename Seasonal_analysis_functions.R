@@ -1,6 +1,6 @@
 
 plot_forecast<-function(rnr,hnr,syear,smonth,flood_values,ptype="greyshade", fpath="../data/netcdf/",
-qtrans=NA){
+qtrans=NA,empqt=FALSE){
 
 if (!require('RNetCDF')) {
     stop('The package RNetCDF was not installed')
@@ -34,6 +34,19 @@ scenario_si<-scenario[si]
 
 qobs_sel<-qobs[yi,mi,]
 qsim_sel<-qsim[yi,mi,si,]
+
+if(empqt){
+  empv<-read.table(file=paste("inst/empq/",rnr,'.',hnr,".txt",sep=''),sep=";",header=TRUE)  
+  myfun<-approxfun(sort(empv[,1]),sort(empv[,2]))
+ qsim_sel_t<-qsim_sel 
+  simdim<-dim(qsim_sel_t)
+  for(m in 1:simdim[1]){
+    for(n in 1:simdim[2]){
+        qsim_sel_t[m,n]<-myfun(qsim_sel[m,n])
+    }
+  }
+ qsim_sel<-qsim_sel_t 
+}
 
 if(any(!is.na(qtrans))){
 simdim<-dim(qsim_sel)
@@ -74,7 +87,7 @@ axis(1,at=xtt,labels=dlabel)
 
 if(ptype=="spaghetti"){
 for(i in 1 : dim(qsim_sel)[1]){
-lines(qsim_sel[i,],col="grey")
+lines(qsim_sel_t[i,],col="grey")
 }
 }
 
@@ -99,7 +112,9 @@ abline(h=flood_values[ci,4],col="yellow")
 abline(h=flood_values[ci,5],col="orange")
 abline(h=flood_values[ci,6],col="red")
 
-if(any(is.na(qtrans))){
+if(is.na(qtrans)&!empqt){
+#print(qtrans)
+#print(empqt)
 abline(h=flood_values[ci,7],col="yellow",lty=2)
 abline(h=flood_values[ci,8],col="orange",lty=2)
 abline(h=flood_values[ci,9],col="red",lty=2)
@@ -108,7 +123,7 @@ abline(h=flood_values[ci,9],col="red",lty=2)
 
 nover<-c(1:3)
 for(j in 1 : 3){
-if(any(is.na(qtrans))){
+if(any(is.na(qtrans))&!empqt){
 ttest<-qsim_sel>flood_values[ci,6+j]
 }
 else{
@@ -119,7 +134,7 @@ nover_t<-rowSums(ttest,na.rm=TRUE)
 nover_t[nover_t>=1]=1
 nover[j]=mean(nover_t)
 
-if(any(is.na(qtrans))){
+if(is.na(qtrans)&!empqt){
 text(10,flood_values[ci,6+j],round(nover[j],2))
 }
 else{
@@ -130,18 +145,34 @@ text(10,flood_values[ci,3+j],round(nover[j],2))
 }
 
 if(ptype=="greyshade"){
+if(is.na(qtrans)&!empqt){
 legend('topright',legend=c("Observed streamflow",paste("Maximum scenario:",scenario_si[maxind]),"50% interval","95% interval","Mean flood (obs)","5 years flood (obs)", "50 years flood (obs)",
 "Mean flood (hbv)","5 years flood (hbv)", "50 years flood (hbv)"),
 lty=c(1,1,1,1,1,1,1,2,2,2),col=c("blue","cyan",0,0,"yellow","orange","red","yellow","orange","red"),
 fill=c(0,0,"grey30","grey80",0,0,0,0,0,0),border=c(0,0,1,1,0,0,0,0,0,0))
+}else{
+legend('topright',legend=c("Observed streamflow",paste("Maximum scenario:",scenario_si[maxind]),"50% interval","95% interval","Mean flood (obs)","5 years flood (obs)", "50 years flood (obs)"),
+lty=c(1,1,1,1,1,1,1),col=c("blue","cyan",0,0,"yellow","orange","red"),
+fill=c(0,0,"grey30","grey80",0,0,0),border=c(0,0,1,1,0,0,0))
+
+}
+
 }
 
 if(ptype=="spaghetti"){
+if(is.na(qtrans)&!empqt){
 legend('topright',legend=c("Observed streamflow",paste("Maximum scenario:",scenario_si[maxind]),"Scenarios","Mean flood (obs)","5 years flood (obs)", "50 years flood (obs)",
 "Mean flood (hbv)","5 years flood (hbv)", "50 years flood (hbv)"),
 lty=c(1,1,1,1,1,1,2,2,2),col=c("blue","cyan","grey","grey","yellow","orange","red","yellow","orange","red"))
 
 }
+}else{
+legend('topright',legend=c("Observed streamflow",paste("Maximum scenario:",scenario_si[maxind]),"50% interval","95% interval","Mean flood (obs)","5 years flood (obs)", "50 years flood (obs)"),
+lty=c(1,1,1,1,1,1,1),col=c("blue","cyan",0,0,"yellow","orange","red"),
+fill=c(0,0,"grey30","grey80",0,0,0),border=c(0,0,1,1,0,0,0))
+
+}
+
 
 }
 
@@ -149,7 +180,7 @@ lty=c(1,1,1,1,1,1,2,2,2),col=c("blue","cyan","grey","grey","yellow","orange","re
 
 
 
-analyze_forecast<-function(rnr,hnr,smonth,fpath="../data/netcdf/",flood_values,qtrans=NA,mplot=TRUE){
+analyze_forecast<-function(rnr,hnr,smonth,fpath="../data/netcdf/",flood_values,qtrans=NA,mplot=TRUE,empqt=FALSE){
 if (!require('RNetCDF')) {
     stop('The package RNetCDF was not installed')
   }
@@ -185,6 +216,8 @@ mi=which(smonth==fmonths)
 maxvalues_sim<-matrix(ncol=length(scenario)-1,nrow=length(fyears))
 maxvalues_obs<-rep(NA,length(fyears))
 maxindex_obs<-rep(NA,length(fyears))
+volumes_sim<-maxvalues_sim
+volumes_obs<-maxvalues_obs
 ens.ref<-matrix(ncol=(length(scenario)-1),nrow=length(fyears))
 pp_qmean<-rep(NA,length(fyears))
 pp_q5<-rep(NA,length(fyears))
@@ -208,10 +241,11 @@ si=which(fyears[i]!=scenario)
 qobs_sel<-qobs[i,mi,1:lmax]
 qsim_sel<-qsim[i,mi,si,1:lmax]
 maxvalues_sim[i,]<-apply(qsim_sel,1,max,na.rm=TRUE)
-
+volumes_sim[i,]<-apply(qsim_sel,1,sum,na.rm=TRUE)
 if ( any(is.na(qobs_sel))){
 maxvalues_obs[i]<-NA
 maxindex_obs[i]<-NA
+volumes_obs[i]<-NA
 bb_qmean[i]<-NA
 bb_q5[i]<- NA
 bb_q50[i]<- NA
@@ -224,6 +258,7 @@ bb_qsimq50[i,]<-NA
 }
 else {
 maxvalues_obs[i]<-max(qobs_sel,na.rm=TRUE)
+volumes_obs[i]<-sum(qobs_sel,na.rm=TRUE)
 maxindex_obs[i]<-which.max(qobs_sel)
 bb_qmean[i]<-as.integer(maxvalues_obs[i]>flood_values[ci,4])
 bb_q5[i]<- as.integer(maxvalues_obs[i]>flood_values[ci,5])
@@ -309,6 +344,23 @@ qsim_sel_t[m,n]<-qgamma(FF1,parsel[1], parsel[2])
 maxvalues_sim<-qsim_sel_t
 }
 
+if(empqt){
+#print("empqt")
+ empv<-read.table(file=paste("inst/empq/",rnr,'.',hnr,".txt",sep=''),sep=";",header=TRUE)  
+ myfun<-approxfun(sort(empv[,1]),sort(empv[,2]))
+ simdim<-dim(maxvalues_sim)
+qsim_sel_t<-maxvalues_sim
+
+for(m in 1:simdim[1]){
+for(n in 1:simdim[2]){
+        qsim_sel_t[m,n]<-myfun(maxvalues_sim[m,n])
+#		print(c(m,n,qsim_sel_t[m,n]))
+    }
+  }
+ maxvalues_sim<-qsim_sel_t 
+}
+
+
 
 
 
@@ -372,9 +424,9 @@ axis(1,at=c(1:length(fyears)),labels=as.character(fyears))
 points(maxvalues_obs,col="blue",pch=15)
 }
 
-qsim_95<-apply(maxvalues_sim,1,quantile,0.95)
-qsim_5<-apply(maxvalues_sim,1,quantile,0.05)
-qsim_50<-apply(maxvalues_sim,1,quantile,0.5)
+qsim_95<-apply(maxvalues_sim,1,quantile,0.95,na.rm=TRUE)
+qsim_5<-apply(maxvalues_sim,1,quantile,0.05,na.rm=TRUE)
+qsim_50<-apply(maxvalues_sim,1,quantile,0.5,na.rm=TRUE)
 qsim_max<-apply(maxvalues_sim,1,max,na.rm=TRUE)
 
 ssmax<-max(qsim_max,maxvalues_obs,na.rm=TRUE)
@@ -418,37 +470,37 @@ out$brier_qmean<-SpecsVerification::EnsBrier(bb_qsimmean,bb_qmean,0.5)
 out$brier_q5<-SpecsVerification::EnsBrier(bb_qsimq5,bb_q5,0.5)
 
 out$brier_q50<-SpecsVerification::EnsBrier(bb_qsimq50,bb_q50,0.5)
-qsim_50<-apply(maxvalues_sim,1,quantile,0.5)
+qsim_50<-apply(maxvalues_sim,1,quantile,0.5,na.rm=TRUE)
 out$rmse<-sqrt(mean((qsim_50-maxvalues_obs)^2))
 out$Reff<-1.0-(mean((qsim_50-maxvalues_obs)^2,na.rm=TRUE)/var(maxvalues_obs,na.rm=TRUE))
 out$corr<-cor(maxvalues_obs,qsim_50,use="pairwise.complete.obs")
 out$crpss<-SpecsVerification::EnsCrpss(maxvalues_sim, ens.ref, maxvalues_obs) 
-print('test')
-print(dim(bb_ensmean))
+#print('test')
+#print(dim(bb_ensmean))
 out$brierss_qmean<-SpecsVerification::EnsBrierSs(bb_qsimmean, bb_ensmean, bb_qmean,0.5)
-print('test')
-print(dim(bb_ensq5))
+#print('test')
+#print(dim(bb_ensq5))
 out$brierss_q5<-SpecsVerification::EnsBrierSs(bb_qsimq5, bb_ensq5, bb_q5,0.5)
-print('test')
-print(dim(bb_ensq50))
+#print('test')
+#print(dim(bb_ensq50))
 out$brierss_q50<-SpecsVerification::EnsBrierSs(bb_qsimq50, bb_ensq50, bb_q50,0.5)
 out$csi<-csi
 out
 }
 
 
-analyse_all<-function(npath,flood_values,qtrans){
+analyse_all<-function(npath,flood_values,qtrans,empqt=FALSE){
 	out_analyze<-list()
 	temp<-matrix(unlist(strsplit(as.character(qtrans[,1]),'.',fixed=TRUE)) ,ncol=5,byrow=TRUE)[,1:2]
 	for(i in 1 : dim(qtrans)[1]){
 		out_analyze[[i]]<-list() 
 		rnr<-as.integer(temp[i,1])
 		hnr<-as.integer(temp[i,2])	
-        print(temp[i,])		
+ #       print(temp[i,])		
 		for( j in 1 : 7){
-		print(c(i,j))
-
-			out_analyze[[i]][[j]]<-analyze_forecast(rnr,hnr,j,fpath=npath,flood_values=flood_values,qtrans=qtrans,mplot=FALSE)
+#		print(c(i,j))
+            if(empqt) out_analyze[[i]][[j]]<-analyze_forecast(rnr,hnr,j,fpath=npath,flood_values=flood_values,mplot=FALSE,empqt=TRUE)
+			else out_analyze[[i]][[j]]<-analyze_forecast(rnr,hnr,j,fpath=npath,flood_values=flood_values,qtrans=qtrans,mplot=FALSE)
 		}
 	}
 	names(out_analyze)<-paste(temp[,1],'.',temp[,2],sep='')
