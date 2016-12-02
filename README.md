@@ -70,9 +70,9 @@ Syear is year
 flood_values<-read.table('inst/flomtabell_ny.txt',sep="")
 qtransform<-read.table("inst/Transformations_gumbel.txt")
 NetCDFfolder = "M:/Dokumenter/Sesongvarsler/"
-Rnr=2
-Hnr=11
-Syear=1974
+Rnr=12
+Hnr=286
+Syear=1995
 Smonth=4
 plot_forecast(Rnr,Hnr,Syear,Smonth,flood_values,ptype="greyshade",fpath=NetCDFfolder)
 plot_forecast(Rnr,Hnr,Syear,Smonth,flood_values,ptype="greyshade",fpath=NetCDFfolder,qtrans=qtransform)
@@ -81,6 +81,11 @@ plot_forecast(Rnr,Hnr,Syear,Smonth,flood_values,ptype="spaghetti",fpath=NetCDFfo
 plot_forecast(Rnr,Hnr,Syear,Smonth,flood_values,ptype="greyshade",fpath=NetCDFfolder,empqt=TRUE)
 plot_forecast(Rnr,Hnr,Syear,Smonth,flood_values,ptype="spaghetti",fpath=NetCDFfolder,empqt=TRUE)
 ```
+Rnr=42
+Hnr=2
+Syear=1995
+Smonth=4
+
 
 ## Analysing scenarios for one specific catchment issued at one specific month
 Evaluate the performance of the scenarios using standard verification tools and verification metricsRnr
@@ -100,8 +105,8 @@ Arguments:
 * mplot is TRUE for showing evaluation plots.
  
 ```R
-Rnr=2
-Hnr=11
+Rnr=12
+Hnr=286
 Smonth=4
 flood_values<-read.table('inst/flomtabell_ny.txt',sep="")
 qtransform<-read.table("inst/Transformations_gumbel.txt")
@@ -147,12 +152,18 @@ seasonal_evaluation<-analyse_all(NetCDFfolder,flood_values,qtransform_sel)
 # Empirical quantile transformation
 seasonal_evaluation<-analyse_all(NetCDFfolder,flood_values,qtransform_sel,empqt=TRUE)
 
+#seasonal_evaluation<-seasonal_evaluation[[c(1:97,99:120)]]
+
 corr_all<-get_corr_all(out=seasonal_evaluation)
+corr_v_all<-get_corr_v_all(out=seasonal_evaluation)
 crpss_all<-get_crpss_all(out=seasonal_evaluation)
+crpss_v_all<-get_crpss_v_all(out=seasonal_evaluation)
 roc_all<-get_roc_all(out=seasonal_evaluation,ri=1)
 bss_all<-get_bss_all(out=seasonal_evaluation)
+bss_v_all<-get_bss_v_all(out=seasonal_evaluation)
 Reff_all<-get_Reff_all(out=seasonal_evaluation)
 csi_all<-get_csi_all(out=seasonal_evaluation,1)
+csi_v_all<-get_csi_v_all(out=seasonal_evaluation,1)
 Reff_all<-get_Reff_all(out=seasonal_evaluation)
 mindex_all<-get_mindex_all(out=seasonal_evaluation)
 ```
