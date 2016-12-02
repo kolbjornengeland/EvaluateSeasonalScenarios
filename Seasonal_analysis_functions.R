@@ -971,6 +971,38 @@ return(roc_out)
 
 
 
+
+get_roc_v_month<-function(out,mm,ri){
+ncc<-(length(out)-1)
+roc_out<-matrix(NA,ncol=2,nrow=ncc) 
+rownames(roc_out)<-names(out)[1:ncc]
+ for(i in 1 : ncc) {
+ roc_out[i,1]<- out[[i]][[mm]]$roc_area_v[ri]
+ roc_out[i,2]<- out[[i]][[mm]]$roc_pvalue_v[ri]
+}
+ return(roc_out)
+}
+
+
+
+get_roc_all<-function(out,ri){
+ncc<-(length(out)-1)
+roc_out<-matrix(NA,ncol=17,nrow=ncc)
+colnames(roc_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_roc','Month','P_Jan','P_Feb','P_Mar','P_Apr','P_Mai','P_Jun','P_Jul','Sig_all')
+rownames(roc_out)<-names(out)[1:ncc]
+for(i in 1 : 7){
+temp<-get_roc_v_month(out,mm=i,ri)
+roc_out[,i]<-temp[,1]
+roc_out[,(9+i)]<-temp[,2]
+}
+roc_out[,8]<-apply(roc_out[,1:7],1,max)
+roc_out[,9]<-apply(roc_out[,1:7],1,which.max)
+roc_out[,17]<-sapply(c(1:ncc),FUN=function(i){return(roc_out[i,roc_out[i,9]+9])})
+return(roc_out)
+}
+
+
+
 get_bss_month<-function(out,mm){
 ncc<-(length(out)-1)
 rl<-out[[ncc+1]]
