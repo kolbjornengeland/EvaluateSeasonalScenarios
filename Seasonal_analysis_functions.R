@@ -706,34 +706,39 @@ return(obs_max)
 
 
 get_corr_month<-function(out,mm){
-ncc<-(length(out)-1)
-corr_all<-rep(NA,ncc)
-ndata<-out[[ncc+1]]
-for(i in 1 : ncc)
-corr_all[i]<- out[[i]][[mm]]$corr
-# Beregner t-value:
-tt<-abs(qt(0.05,ndata-2))
-#beregner kritisk verdi for korrelasjon
-rr= tt/sqrt(ndata-2+tt^2)
-cout<-cbind(corr_all,rr)
-rownames(cout)<-names(out)[1:ncc]
-return(cout)
+  ncc<-(length(out)-1)
+  corr_all<-rep(NA,ncc)
+  ndata<-out[[ncc+1]]
+  for(i in 1 : ncc)
+    corr_all[i]<- out[[i]][[mm]]$corr
+  # Beregner t-value:
+  tt<-abs(qt(0.05,ndata-2))
+  #beregner kritisk verdi for korrelasjon
+  rr= tt/sqrt(ndata-2+tt^2)
+  cout<-cbind(corr_all,rr)
+  rownames(cout)<-names(out)[1:ncc]
+  return(cout)
 }
 
 
 
 get_corr_all<-function(out){
-ncc<-(length(out)-1)
-corr_out<-matrix(NA,ncol=10,nrow=ncc)
-colnames(corr_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_corr','Month','R_sig')
-rownames(corr_out)<-names(out)[1:ncc]
-for(i in 1 : 7){
-corr_out[,i]<-get_corr_month(out,i)[,1]
-}
-corr_out[,8]<-apply(corr_out[,1:7],1,max)
-corr_out[,9]<-unlist(apply(corr_out[,1:7],1,which.max))
-corr_out[,10]<-get_corr_month(out,1)[,2]
-return(corr_out)
+  ncc<-(length(out)-1)
+  corr_out<-matrix(NA,ncol=14,nrow=ncc)
+  colnames(corr_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_corr','Month','R_sig','Max_corr-j_m','month1_5','max_corr_j_a','month1_4')
+  rownames(corr_out)<-names(out)[1:ncc]
+  for(i in 1 : 7){
+    corr_out[,i]<-get_corr_month(out,i)[,1]
+  }
+  corr_out[,8]<-apply(corr_out[,1:7],1,max)
+  corr_out[,9]<-unlist(apply(corr_out[,1:7],1,which.max))
+  corr_out[,10]<-get_corr_month(out,1)[,2]
+  corr_out[,11]<-apply(corr_out[,1:5],1,max)
+  corr_out[,12]<-unlist(apply(corr_out[,1:5],1,which.max))
+  corr_out[,13]<-apply(corr_out[,1:4],1,max)
+  corr_out[,14]<-unlist(apply(corr_out[,1:4],1,which.max))
+  
+  return(corr_out)
 }
 
 
@@ -758,17 +763,21 @@ return(cout)
 
 
 get_corr_v_all<-function(out){
-ncc<-(length(out)-1)
-corr_out<-matrix(NA,ncol=10,nrow=ncc)
-colnames(corr_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_corr','Month','R_sig')
-rownames(corr_out)<-names(out)[1:ncc]
-for(i in 1 : 7){
-corr_out[,i]<-get_corr_v_month(out,i)[,1]
-}
-corr_out[,8]<-apply(corr_out[,1:7],1,max)
-corr_out[,9]<-unlist(apply(corr_out[,1:7],1,which.max))
-corr_out[,10]<-get_corr_month(out,1)[,2]
-return(corr_out)
+  ncc<-(length(out)-1)
+  corr_out<-matrix(NA,ncol=14,nrow=ncc)
+  colnames(corr_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_corr','Month','R_sig','Max_corr-j_m','month1_5','max_corr_j_a','month1_4')
+  rownames(corr_out)<-names(out)[1:ncc]
+  for(i in 1 : 7){
+    corr_out[,i]<-get_corr_v_month(out,i)[,1]
+  }
+  corr_out[,8]<-apply(corr_out[,1:7],1,max)
+  corr_out[,9]<-unlist(apply(corr_out[,1:7],1,which.max))
+  corr_out[,10]<-get_corr_month(out,1)[,2]
+  corr_out[,11]<-apply(corr_out[,1:5],1,max)
+  corr_out[,12]<-unlist(apply(corr_out[,1:5],1,which.max))
+  corr_out[,13]<-apply(corr_out[,1:4],1,max)
+  corr_out[,14]<-unlist(apply(corr_out[,1:4],1,which.max))
+  return(corr_out)
 }
 
 
@@ -802,7 +811,30 @@ Reff_out[,9]<-apply(Reff_out[,1:7],1,which.max)
 return(Reff_out)
 }
 
+get_Reff_v_month<-function(out,mm){
+  ncc<-(length(out)-1)
+  Reff_all<-rep(NA,ncc)
+  for(i in 1 : ncc)
+    Reff_all[i]<- out[[i]][[mm]]$Reff_v
+  names(Reff_all)<-names(out)[1:ncc]
+  return(Reff_all)
+}
 
+
+
+get_Reff_v_all<-function(out,ndata){
+  ncc<-(length(out)-1)
+  Reff_out<-matrix(NA,ncol=9,nrow=ncc)
+  colnames(Reff_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_Reff','Month')
+  rownames(Reff_out)<-names(out)[1:ncc]
+  for(i in 1 : 7){
+    Reff_out[,i]<-get_Reff_v_month(out,i)
+  }
+  Reff_out[,8]<-apply(Reff_out[,1:7],1,max)
+  Reff_out[,9]<-apply(Reff_out[,1:7],1,which.max)
+  
+  return(Reff_out)
+}
 
 
 
@@ -984,7 +1016,7 @@ rownames(roc_out)<-names(out)[1:ncc]
 
 
 
-get_roc_all<-function(out,ri){
+get_roc_v_all<-function(out,ri){
 ncc<-(length(out)-1)
 roc_out<-matrix(NA,ncol=17,nrow=ncc)
 colnames(roc_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul','Max_roc','Month','P_Jan','P_Feb','P_Mar','P_Apr','P_Mai','P_Jun','P_Jul','Sig_all')
@@ -1034,8 +1066,7 @@ return(bss_out)
 
 
 
-<<<<<<< HEAD
-=======
+
 
 
 get_bss_v_month<-function(out,mm){
@@ -1068,4 +1099,4 @@ bss_out[,17]<-sapply(c(1:ncc),FUN=function(i){return(bss_out[i,bss_out[i,9]+9])}
 return(bss_out)
 }
 
->>>>>>> refs/remotes/origin/master
+

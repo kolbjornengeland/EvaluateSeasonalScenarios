@@ -28,10 +28,10 @@ Buvatn,H1L1,1,12.150.0
 Hølervatn,H1L1,1,12.171.0
 Eggedal,H1L1,1,12.178.0
 Sundbyfoss,H2L3,4,12.192.0
-Fiskum,H2L3,4,12.193.0
+Fiskum,H2L1,2,12.193.0
 Urula,H1L1,1,12.209.0
 Storeskar,H1L1,1,12.215.0
-Jaren,H2L2,3,12.286.0
+Jaren,H2L1,2,12.286.0
 Bagn,H1L1,1,12.290.0
 Jondalselv,H2L1,2,15.21.0
 Halledalsvatn,H1L1,1,15.49.0
@@ -43,7 +43,7 @@ Tannsvatn,H2L1,2,16.75.0
 Grovåi,H2L1,2,16.122.0
 Gjuvå,H2L1,2,16.132.0
 Kvenna,H1L1,1,16.140.0
-Hørte,H2L1,1,16.193.0
+Hørte,H2L1,2,16.193.0
 Gjerstad,H2L3,4,18.10.0
 Lilleelv,H3L3,5,19.107.0
 Austenå,H2L1,2,20.2.0
