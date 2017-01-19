@@ -1123,7 +1123,7 @@ analyse_all_swe<-function(npath,flood_values,qtrans,empqt=FALSE){
 		hnr<-as.integer(temp[i,2])	
  #       print(temp[i,])		
 		for( j in 1 : 7){
-		print(c(i,j,rnr,hnr))
+#		print(c(i,j,rnr,hnr))
             out_analyze[[i]][[j]]<-analyze_forecast_swe(rnr,hnr,j,fpath=npath,flood_values=flood_values,qtrans=NA,mplot=FALSE,empqt=FALSE)
 		}
 	}
@@ -1201,7 +1201,7 @@ maxvalues_obs[i]<-max(qobs_sel,na.rm=TRUE)
 }
 }
 
-print(swe_start)
+#print(swe_start)
 # If less than 10 years provides swe at the start of the monrth, no regression!
 if(sum(!is.na(swe_start))<10){
 out<-list()
