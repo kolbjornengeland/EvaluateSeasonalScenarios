@@ -1067,3 +1067,184 @@ bss_out[,17]<-sapply(c(1:ncc),FUN=function(i){return(bss_out[i,bss_out[i,9]+9])}
 return(bss_out)
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+analyse_all_swe<-function(npath,flood_values,qtrans,empqt=FALSE){
+	out_analyze<-list()
+	temp<-matrix(unlist(strsplit(as.character(qtrans[,1]),'.',fixed=TRUE)) ,ncol=5,byrow=TRUE)[,1:2]
+	for(i in 1 : dim(qtrans)[1]){
+		out_analyze[[i]]<-list() 
+		rnr<-as.integer(temp[i,1])
+		hnr<-as.integer(temp[i,2])	
+ #       print(temp[i,])		
+		for( j in 1 : 7){
+#		print(c(i,j))
+            out_analyze[[i]][[j]]<-analyze_forecast_swe(rnr,hnr,j,fpath=npath,flood_values=flood_values,qtrans=NA,mplot=FALSE,empqt=FALSE)
+		}
+	}
+	names(out_analyze)<-paste(temp[,1],'.',temp[,2],sep='')
+    out_analyze$ndata<-qtrans[,2]
+	return(out_analyze)
+}
+
+
+
+
+
+
+
+
+
+
+
+analyze_forecast_swe<-function(rnr,hnr,smonth,fpath="../data/netcdf/",flood_values,qtrans=NA,mplot=TRUE,empqt=FALSE){
+
+if (!require('RNetCDF')) {
+    stop('The package RNetCDF was not installed')
+  }
+
+  if (!require('nsRFA')) {
+    stop('The package nsRFA was not installed')
+  }
+
+   if (!require('verification')) {
+    stop('The package verification was not installed')
+  }
+
+  if (!require('SpecsVerification')) {
+    stop('The package SpecsVerification was not installed')
+  }  
+  
+  
+ci<-which(flood_values[,3]==paste(rnr,'_',hnr,sep=''))
+ndays<-c(31,28,31,30,31,30,31)
+lmax<-sum(ndays[smonth:7])
+
+nc<-RNetCDF::open.nc(paste(fpath,"seasonal_forecast_database_",rnr,'.',hnr,".nc",sep=''),main=flood_values[ci,3])
+fyears<-RNetCDF::var.get.nc(nc,"Year")
+fmonths<-RNetCDF::var.get.nc(nc,"Month")
+scenario<-RNetCDF::var.get.nc(nc,"Scenario")
+leadtime<-RNetCDF::var.get.nc(nc,"LeadTime")
+qobs<-RNetCDF::var.get.nc(nc,"qobs")
+qsim<-RNetCDF::var.get.nc(nc,"vf")
+swe<-var.get.nc(nc,"swe")
+precs<-var.get.nc(nc,"p")
+temps<-var.get.nc(nc,"t")
+
+#yi=which(syear==fyears)
+mi=which(smonth==fmonths)
+swe_start<-rep(NA,length(fyears))
+
+maxvalues_obs<-rep(NA,length(fyears))
+volumes_obs<-maxvalues_obs
+
+
+for(i in 1 : length(fyears)){
+si=which(fyears[i]!=scenario)
+qobs_sel<-qobs[i,mi,1:lmax]
+if ( any(is.na(qobs_sel)))volumes_obs[i]<-NA
+else volumes_obs[i]<-sum(qobs_sel,na.rm=TRUE)*60*60*24/1000000
+
+swe_start[i]<-swe[i,mi,temps[i,mi,,1]<0 & precs[i,mi,,1]<=0.0001,1][1]
+qobs_sel<-qobs[i,mi,1:lmax]
+if ( any(is.na(qobs_sel))){
+maxvalues_obs[i]<-NA
+}
+else {
+maxvalues_obs[i]<-max(qobs_sel,na.rm=TRUE)
+}
+
+
+
+
+}
+
+#  xx <- seq(min(x,na.rm=T),max(x,na.rm=T), length=length(unique_years))
+#  lines(xx, predict(fit3, data.frame(x=xx)), col="black")
+#predict(out$fit, data.frame(swe_start=50))
+
+windows(6,6)
+plot(swe_start,maxvalues_obs,type="p",xlab="SWE (mm)",ylab="Flood peak",main=flood_values[ci,3])
+myfit1<-lm(maxvalues_obs~swe_start)
+xx <- seq(min(swe_start,na.rm=T),max(swe_start,na.rm=T), length=length(swe_start))
+lines(xx, predict(myfit1, data.frame(swe_start=xx)), col="chartreuse4")
+
+windows(6,6)
+plot(swe_start,volumes_obs,type="p",xlab="SWE (mm)",ylab="Flood volume",main=flood_values[ci,3])
+myfit2<-lm(volumes_obs~swe_start)
+xx <- seq(min(swe_start,na.rm=T),max(swe_start,na.rm=T), length=length(swe_start))
+lines(xx, predict(myfit2, data.frame(swe_start=xx)), col="chartreuse4")
+
+
+ssmin=min(maxvalues_obs,myfit1$fitted.values,na.rm=T)
+ssmax=max(maxvalues_obs,myfit1$fitted.values,na.rm=T)
+windows(8,8)
+plot(na.omit(maxvalues_obs),myfit1$fitted.values,xlim=c(ssmin,ssmax),ylim=c(ssmin,ssmax),xlab="Observed floods (m3/s)",ylab="Regression model (m3/s)")
+legend('bottomright',legend=c(paste("Regression model cor:",round(cor(na.omit(maxvalues_obs),myfit1$fitted.values,use="pairwise.complete.obs"),2))),col=c(1),pch=c(1))
+abline(0,1)
+
+ssmin=min(volumes_obs,myfit2$fitted.values,na.rm=T)
+ssmax=max(volumes_obs,myfit2$fitted.values,na.rm=T)
+windows(8,8)
+plot(na.omit(volumes_obs),myfit2$fitted.values,xlim=c(ssmin,ssmax),ylim=c(ssmin,ssmax),xlab="Observed volume (M m3)",ylab="Regression model (m3/s)")
+legend('bottomright',legend=c(paste("Regression model cor:",round(cor(na.omit(volumes_obs),myfit2$fitted.values,use="pairwise.complete.obs"),2))),col=c(1),pch=c(1))
+abline(0,1)
+out<-list()
+out$corr<-cor(na.omit(maxvalues_obs),myfit1$fitted.values,use="pairwise.complete.obs")
+out$corr_v<-cor(na.omit(volumes_obs),myfit2$fitted.values,use="pairwise.complete.obs")
+out$Reff<-1.0-(mean((myfit1$fitted.values-na.omit(maxvalues_obs))^2,na.rm=TRUE)/var(maxvalues_obs,na.rm=TRUE))
+out$Reff_v<-1.0-(mean((myfit2$fitted.values-na.omit(volumes_obs))^2,na.rm=TRUE)/var(volumes_obs,na.rm=TRUE))
+out$fit<-myfit1
+return(out)
+
+}
+
+
+
+
+
+
