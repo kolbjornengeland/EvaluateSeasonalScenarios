@@ -1100,8 +1100,7 @@ return(bss_out)
 }
 
 
-<<<<<<< HEAD
-=======
+
 
 
 
@@ -1282,4 +1281,4 @@ return(out)
 
 
 
->>>>>>> refs/remotes/origin/master
+
