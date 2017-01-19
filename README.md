@@ -325,3 +325,14 @@ boxplot(roc_all[,8]~regimer_s[,2])
 ```
 
 
+```R
+Rnr=12
+Hnr=286
+Smonth=4
+flood_values<-read.table('inst/flomtabell_ny.txt',sep="")
+qtransform<-read.table("inst/Transformations_gumbel.txt")
+NetCDFfolder="M:/Dokumenter/Sesongvarsler/"
+
+out<-analyze_forecast_swe(Rnr,Hnr,Smonth,fpath=NetCDFfolder,flood_values,qtrans=NA,mplot=TRUE)
+```
+
