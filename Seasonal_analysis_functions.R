@@ -1150,12 +1150,13 @@ analyse_all_swe<-function(npath,flood_values,qtrans,empqt=FALSE){
 	out_analyze<-list()
 	temp<-matrix(unlist(strsplit(as.character(qtrans[,1]),'.',fixed=TRUE)) ,ncol=5,byrow=TRUE)[,1:2]
 	for(i in 1 : dim(qtrans)[1]){
+#	print (i)
 		out_analyze[[i]]<-list() 
 		rnr<-as.integer(temp[i,1])
 		hnr<-as.integer(temp[i,2])	
  #       print(temp[i,])		
 		for( j in 1 : 7){
-#		print(c(i,j))
+#		print(c(i,j,rnr,hnr))
             out_analyze[[i]][[j]]<-analyze_forecast_swe(rnr,hnr,j,fpath=npath,flood_values=flood_values,qtrans=NA,mplot=FALSE,empqt=FALSE)
 		}
 	}
@@ -1214,7 +1215,8 @@ swe_start<-rep(NA,length(fyears))
 
 maxvalues_obs<-rep(NA,length(fyears))
 volumes_obs<-maxvalues_obs
-
+max_pred<-maxvalues_obs
+vol_pred<-maxvalues_obs
 
 for(i in 1 : length(fyears)){
 si=which(fyears[i]!=scenario)
@@ -1230,16 +1232,39 @@ maxvalues_obs[i]<-NA
 else {
 maxvalues_obs[i]<-max(qobs_sel,na.rm=TRUE)
 }
+}
 
+#print(swe_start)
+# If less than 10 years provides swe at the start of the monrth, no regression!
+if(sum(!is.na(swe_start))<10){
+out<-list()
+out$corr<-NA
+out$corr_v<-NA
+out$Reff<-NA
+out$Reff_v<-NA
+#out$fit<-myfit1
+return(out)
+}
+# Regression - cross validation!
+for(i in 1 : length(fyears)){
+si=which(fyears[i]!=scenario)
+# estimate with year i lefty out
+#print(si)
+#print(maxvalues_obs[si])
+#print
+myfit1<-lm(maxvalues_obs[si]~swe_start[si])
 
-
-
+myfit2<-lm(volumes_obs[si]~swe_start[si])
+#predict for year i
+max_pred[i]<-predict(myfit1, data.frame(swe_start=swe_start[i]))
+vol_pred[i]<-predict(myfit2, data.frame(swe_start=swe_start[i]))
 }
 
 #  xx <- seq(min(x,na.rm=T),max(x,na.rm=T), length=length(unique_years))
 #  lines(xx, predict(fit3, data.frame(x=xx)), col="black")
 #predict(out$fit, data.frame(swe_start=50))
 
+if(mplot){
 windows(6,6)
 plot(swe_start,maxvalues_obs,type="p",xlab="SWE (mm)",ylab="Flood peak",main=flood_values[ci,3])
 myfit1<-lm(maxvalues_obs~swe_start)
@@ -1253,25 +1278,26 @@ xx <- seq(min(swe_start,na.rm=T),max(swe_start,na.rm=T), length=length(swe_start
 lines(xx, predict(myfit2, data.frame(swe_start=xx)), col="chartreuse4")
 
 
-ssmin=min(maxvalues_obs,myfit1$fitted.values,na.rm=T)
-ssmax=max(maxvalues_obs,myfit1$fitted.values,na.rm=T)
+ssmin=min(maxvalues_obs,max_pred,na.rm=T)
+ssmax=max(maxvalues_obs,max_pred,na.rm=T)
 windows(8,8)
-plot(na.omit(maxvalues_obs),myfit1$fitted.values,xlim=c(ssmin,ssmax),ylim=c(ssmin,ssmax),xlab="Observed floods (m3/s)",ylab="Regression model (m3/s)")
-legend('bottomright',legend=c(paste("Regression model cor:",round(cor(na.omit(maxvalues_obs),myfit1$fitted.values,use="pairwise.complete.obs"),2))),col=c(1),pch=c(1))
+plot(maxvalues_obs,max_pred,xlim=c(ssmin,ssmax),ylim=c(ssmin,ssmax),xlab="Observed floods (m3/s)",ylab="Regression model (m3/s)")
+legend('bottomright',legend=c(paste("Regression model cor:",round(cor(maxvalues_obs,max_pred,use="pairwise.complete.obs"),2))),col=c(1),pch=c(1))
 abline(0,1)
 
-ssmin=min(volumes_obs,myfit2$fitted.values,na.rm=T)
-ssmax=max(volumes_obs,myfit2$fitted.values,na.rm=T)
+ssmin=min(volumes_obs,vol_pred,na.rm=T)
+ssmax=max(volumes_obs,vol_pred,na.rm=T)
 windows(8,8)
-plot(na.omit(volumes_obs),myfit2$fitted.values,xlim=c(ssmin,ssmax),ylim=c(ssmin,ssmax),xlab="Observed volume (M m3)",ylab="Regression model (m3/s)")
-legend('bottomright',legend=c(paste("Regression model cor:",round(cor(na.omit(volumes_obs),myfit2$fitted.values,use="pairwise.complete.obs"),2))),col=c(1),pch=c(1))
+plot(volumes_obs,vol_pred,xlim=c(ssmin,ssmax),ylim=c(ssmin,ssmax),xlab="Observed volume (M m3)",ylab="Regression model (m3/s)")
+legend('bottomright',legend=c(paste("Regression model cor:",round(cor(volumes_obs,vol_pred,use="pairwise.complete.obs"),2))),col=c(1),pch=c(1))
 abline(0,1)
+}
 out<-list()
-out$corr<-cor(na.omit(maxvalues_obs),myfit1$fitted.values,use="pairwise.complete.obs")
-out$corr_v<-cor(na.omit(volumes_obs),myfit2$fitted.values,use="pairwise.complete.obs")
-out$Reff<-1.0-(mean((myfit1$fitted.values-na.omit(maxvalues_obs))^2,na.rm=TRUE)/var(maxvalues_obs,na.rm=TRUE))
-out$Reff_v<-1.0-(mean((myfit2$fitted.values-na.omit(volumes_obs))^2,na.rm=TRUE)/var(volumes_obs,na.rm=TRUE))
-out$fit<-myfit1
+out$corr<-cor(maxvalues_obs,vol_pred,use="pairwise.complete.obs")
+out$corr_v<-cor(volumes_obs,vol_pred,use="pairwise.complete.obs")
+out$Reff<-1.0-(mean((max_pred-maxvalues_obs)^2,na.rm=TRUE)/var(maxvalues_obs,na.rm=TRUE))
+out$Reff_v<-1.0-(mean((vol_pred-volumes_obs)^2,na.rm=TRUE)/var(volumes_obs,na.rm=TRUE))
+#out$fit<-myfit1
 return(out)
 
 }

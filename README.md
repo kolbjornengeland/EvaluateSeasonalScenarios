@@ -324,11 +324,13 @@ boxplot(csi_all[,8]~regimer_s[,2])
 boxplot(roc_all[,8]~regimer_s[,2])
 ```
 
+## Fitting regression model, evaluating according to leave one out cross validation
+
 
 ```R
-Rnr=12
-Hnr=286
-Smonth=4
+Rnr=103
+Hnr=1
+Smonth=7
 flood_values<-read.table('inst/flomtabell_ny.txt',sep="")
 qtransform<-read.table("inst/Transformations_gumbel.txt")
 NetCDFfolder="M:/Dokumenter/Sesongvarsler/"
@@ -336,3 +338,14 @@ NetCDFfolder="M:/Dokumenter/Sesongvarsler/"
 out<-analyze_forecast_swe(Rnr,Hnr,Smonth,fpath=NetCDFfolder,flood_values,qtrans=NA,mplot=TRUE)
 ```
 
+## Fitting regression model, ecaluating according to leave one out cross validation
+```R
+NetCDFfolder="M:/Dokumenter/Sesongvarsler/"
+flood_values<-read.table('inst/flomtabell_ny.txt',sep="")
+qtransform<-read.table("inst/Transformations_gumbel.txt")
+qtransform_sel<-qtransform[qtransform[,2]>30,]
+# Hack. need to exclude 22.16, 41.1 and 55.5 for the moment. Problems with missing data for scenarios,
+qtransform_sel<-qtransform_sel[-c(74,94,100),]
+
+seasonal_evaluation_swe<-analyse_all_swe(NetCDFfolder,flood_values,qtransform_sel)
+```
