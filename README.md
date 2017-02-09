@@ -328,9 +328,9 @@ boxplot(roc_all[,8]~regimer_s[,2])
 
 
 ```R
-Rnr=103
-Hnr=1
-Smonth=7
+Rnr=12
+Hnr=286
+Smonth=3
 flood_values<-read.table('inst/flomtabell_ny.txt',sep="")
 qtransform<-read.table("inst/Transformations_gumbel.txt")
 NetCDFfolder="M:/Dokumenter/Sesongvarsler/"
