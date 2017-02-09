@@ -1277,25 +1277,35 @@ volumes_obs<-maxvalues_obs
 max_pred<-maxvalues_obs
 vol_pred<-maxvalues_obs
 
-for(i in 1 : length(fyears)){
-si=which(fyears[i]!=scenario)
-qobs_sel<-qobs[i,mi,1:lmax]
-if ( any(is.na(qobs_sel)))volumes_obs[i]<-NA
-else volumes_obs[i]<-sum(qobs_sel,na.rm=TRUE)*60*60*24/1000000
+max_pred_se<-maxvalues_obs
+vol_pred_se<-maxvalues_obs
 
-swe_start[i]<-swe[i,mi,temps[i,mi,,1]<0 & precs[i,mi,,1]<=0.0001,1][1]
+esize=500
+
+volumes_sim<-matrix(ncol=esize,nrow=length(fyears))
+maxvalues_sim<-matrix(ncol=esize,nrow=length(fyears))
+
+for(i in 1 : length(fyears)){  # loop on years
+# This loop is for extracting data, i.e. maximum values and volumes for each year
 qobs_sel<-qobs[i,mi,1:lmax]
+
+# Extract streamflow volumes
 if ( any(is.na(qobs_sel))){
+volumes_obs[i]<-NA
 maxvalues_obs[i]<-NA
 }
-else {
-maxvalues_obs[i]<-max(qobs_sel,na.rm=TRUE)
-}
+else{
+ volumes_obs[i]<-sum(qobs_sel,na.rm=TRUE)*60*60*24/1000000
+ maxvalues_obs[i]<-max(qobs_sel,na.rm=TRUE)
 }
 
-#print(swe_start)
-# If less than 10 years provides swe at the start of the monrth, no regression!
-if(sum(!is.na(swe_start))<10){
+# Extract  the snow water equivalent for the firts day
+swe_start[i]<-swe[i,mi,temps[i,mi,,1]<0 & precs[i,mi,,1]<=0.0001,1][1]
+
+}
+
+# If less than 10 years with observed maximumvalues provides a swe at the start of the month, no regression!
+if(sum(!is.na(swe_start*maxvalues_obs))<10){
 out<-list()
 out$corr<-NA
 out$corr_v<-NA
@@ -1305,32 +1315,286 @@ out$Reff_v<-NA
 return(out)
 }
 # Regression - cross validation!
-for(i in 1 : length(fyears)){
-si=which(fyears[i]!=scenario)
-# estimate with year i lefty out
-#print(si)
-#print(maxvalues_obs[si])
-#print
-myfit1<-lm(maxvalues_obs[si]~swe_start[si])
 
-myfit2<-lm(volumes_obs[si]~swe_start[si])
+# create array and matrixes for collecting calculations
+pp_qmean<-rep(NA,length(fyears))
+pp_q5<-rep(NA,length(fyears))
+pp_q50<-rep(NA,length(fyears))
+bb_qmean<-rep(NA,length(fyears))
+bb_q5<-rep(NA,length(fyears))
+bb_q50<-rep(NA,length(fyears))
+bb_qsimmean<-maxvalues_sim
+bb_qsimq5<-maxvalues_sim
+bb_qsimq50<-maxvalues_sim
+
+
+bb_v_q50<- maxvalues_obs
+bb_v_q20<- maxvalues_obs
+
+bb_v_qsimq50<- maxvalues_sim
+bb_v_qsimq20<- maxvalues_sim
+
+
+ens.ref<-matrix(ncol=(length(na.omit(maxvalues_obs))-1),nrow=length(fyears))
+ens.ref.v<-ens.ref
+bb_ensmean<-ens.ref
+bb_ensq5<-ens.ref
+bb_ensq50<-ens.ref
+
+bb_v_ensq50<-ens.ref
+bb_v_ensq20<-ens.ref
+
+bb_v50<-ens.ref
+bb_v20<-ens.ref
+
+# calculate the threshold volumes used for BSS and ROC-area
+volume_q20<-quantile(volumes_obs,0.2,na.rm=TRUE)
+volume_q50<-quantile(volumes_obs,0.5,na.rm=TRUE)
+
+
+
+for(i in 1 : length(fyears)){
+
+#loop on years
+
+#The current year is excluded in order to perform cross-validation
+si=which(fyears[i]!=scenario)
+
+
+# The climatology ensemble! Only needed if we have observations since we do evaluation
+# This is needed for calculating scill scores where the climatology is used as a benchmark
+if(!is.na(maxvalues_obs[i])){
+ens.ref[i,]<-as.numeric(na.omit(maxvalues_obs[si])) # Reference ensemble, i.e. the climatology
+bb_ensmean[i,]<-ens.ref[i,]>flood_values[ci,4] # Calculate which members of the reference enseble are higher than mean flood
+bb_ensq5[i,]<- ens.ref[i,]>flood_values[ci,5] # Calculate which members of the reference enseble are higher than 5-years flood
+bb_ensq50[i,]<- ens.ref[i,]>flood_values[ci,6] # Calculate which members of the reference enseble are higher than 50-years flood
+
+ens.ref.v[i,]<-as.numeric(na.omit(volumes_obs[si]))
+bb_v_ensq50[i,]<-ens.ref.v[i,]<volume_q50 # Calculate which members of the reference enseble are smaller than the median volume flood
+bb_v_ensq20[i,]<- ens.ref.v[i,]<volume_q20 # Calculate which members of the reference enseble are higher than the 20 % volume
+}
+else{
+ens.ref[i,]<-NA
+bb_ensmean[i,]<-NA
+bb_ensq5[i,]<-NA
+bb_ensq50[i,]<-NA
+
+ens.ref.v[i,]<-NA
+bb_v50[i,]<-NA
+bb_v20[i,]<-NA
+}
+
+# Fit the linear models with year i excluded.
+swes=swe_start[si]
+myfit1<-lm(log(maxvalues_obs[si])~swes)
+myfit2<-lm(volumes_obs[si]~swes)
+
 #predict for year i
+<<<<<<< HEAD
 max_pred[i]<-predict(myfit1, data.frame(swe_start=swe_start[i]))
 vol_pred[i]<-predict(myfit2, data.frame(swe_start=swe_start[i]))
+=======
+max_p<-predict(myfit1, data.frame(swes=swe_start[i]),interval = "prediction",se.fit = TRUE)
+vol_p<-predict(myfit2, data.frame(swes=swe_start[i]),interval = "prediction",se.fit = TRUE)
+
+max_pred[i]<-max_p$fit[1]
+vol_pred[i]<-vol_p$fit[1]
+
+#Extract prediction interval
+max_pred_se[i]<-(abs(max_p$fit[1]-max_p$fit[2])/1.96)
+vol_pred_se[i]<-(abs(vol_p$fit[1]-vol_p$fit[2])/1.96)
+
+# Create the ensemble from a normal distribution
+maxvalues_sim[i,]<-exp(rnorm(esize,max_pred[i],max_pred_se[i]))
+volumes_sim[i,]<-rnorm(esize,vol_pred[i],vol_pred_se[i])
+
+max_pred[i]<-exp(max_p$fit[1])
+
+if ( is.na(maxvalues_obs[i])){
+
+bb_qmean[i]<-NA
+bb_q5[i]<- NA
+bb_q50[i]<- NA
+pp_qmean[i]<-NA
+pp_q5[i]<- NA
+pp_q50[i]<- NA
+bb_qsimmean[i,]<-NA
+bb_qsimq5[i,]<-NA
+bb_qsimq50[i,]<-NA
+}
+else {
+
+bb_qmean[i]<-as.integer(maxvalues_obs[i]>flood_values[ci,4]) # Is the observation above or belov the mean flood?
+bb_q5[i]<- as.integer(maxvalues_obs[i]>flood_values[ci,5]) # Is the observation above or belov the 5-years flood?
+bb_q50[i]<- as.integer(maxvalues_obs[i]>flood_values[ci,6]) # Is the observation above or belov the 10-years flood?
+
+
+pp_qmean[i]<-mean(maxvalues_sim[i,]>flood_values[ci,7]) # how many of the simulated floods are above the mean flood?
+pp_q5[i]<- mean(maxvalues_sim[i,]>flood_values[ci,8]) # how many of the simulated floods are above the 5-years flood flood?
+pp_q50[i]<- mean(maxvalues_sim[i,]>flood_values[ci,9]) # how many of the simulated floods are above the 50-years flood flood?
+
+ 
+bb_qsimmean[i,]<-maxvalues_sim[i,]>flood_values[ci,7] # which of the simulated floods are above the mean flood?
+bb_qsimq5[i,]<- maxvalues_sim[i,]>flood_values[ci,8] # which of the simulated floods are above the 5-years flood?
+bb_qsimq50[i,]<- maxvalues_sim[i,]>flood_values[ci,9] # which of the simulated floods are above the 50-years flood?
+
+
+bb_v_q50[i]<- as.integer(volumes_obs[i]<volume_q50) # which of the observed volumes are below v50 ?
+bb_v_q20[i]<- as.integer(volumes_obs[i]<volume_q20) # which of the observed volumes are below v20 ?
+
+bb_v_qsimq50[i,]<- as.integer(volumes_sim[i,]<volume_q50) # which of the observed volumes are below v50 ?
+bb_v_qsimq20[i,]<- as.integer(volumes_sim[i,]<volume_q20) # which of the observed volumes are below v50 ?
+>>>>>>> refs/remotes/origin/master
 
 
 }
+}
 
-#  xx <- seq(min(x,na.rm=T),max(x,na.rm=T), length=length(unique_years))
-#  lines(xx, predict(fit3, data.frame(x=xx)), col="black")
-#predict(out$fit, data.frame(swe_start=50))
+
+
+
+bb_qsimmean<-bb_qsimmean[!is.na(maxvalues_obs),]
+bb_qsimq5<-bb_qsimq5[!is.na(maxvalues_obs),]
+bb_qsimq50<-bb_qsimq50[!is.na(maxvalues_obs),]
+
+bb_ensmean<-bb_ensmean[!is.na(maxvalues_obs),]
+bb_ensq5<-bb_ensq5[!is.na(maxvalues_obs),]
+bb_ensq50<-bb_ensq50[!is.na(maxvalues_obs),]
+
+
+bb_ensmean<-bb_ensmean[,!is.na(bb_ensmean[1,])]
+bb_ensq5<-bb_ensq5[,!is.na(bb_ensmean[1,])]
+bb_ensq50<-bb_ensq50[,!is.na(bb_ensmean[1,])]
+
+
+
+
+bb_qmean<-bb_qmean[!is.na(maxvalues_obs)]
+bb_q5<-bb_q5[!is.na(maxvalues_obs)]
+bb_q50<-bb_q50[!is.na(maxvalues_obs)]
+pp_qmean<-pp_qmean[!is.na(maxvalues_obs)]
+pp_q5<-pp_q5[!is.na(maxvalues_obs)]
+pp_q50<-pp_q50[!is.na(maxvalues_obs)]
+
+
+
+
+roc_area<-c()
+roc_pvalue<-c()
+
+roc_area_v<-c()
+roc_pvalue_v<-c()
+csi<-c()
+csi_v<-c()
+
+outcome<-as.integer(volumes_obs<volume_q20)
+forecasted<-as.integer(apply(volumes_sim,1,quantile,0.5)<volume_q20)
+forecasted<-forecasted[!is.na(outcome)]
+p_volume<-rowMeans(volumes_sim<volume_q20)
+p_volume<-p_volume[!is.na(outcome)]
+outcome<-na.omit(outcome)
+stemp=(sum(outcome) + sum(forecasted&!outcome))
+csi_v[1]<- (-1.0)
+if(stemp>0) csi_v[1]=sum(outcome&forecasted) / stemp
+if(mplot){
+windows(6,6)
+roc_out<-verification::roc.plot(outcome,p_volume,thresholds=seq(0.0,1.0,by=0.1))
+roc_area_v[1]=roc_out$roc.vol$Area
+roc_pvalue_v[1]=roc_out$roc.vol$p.value
+}
+else {
+roc_out<-verification::roc.area(outcome,p_volume)
+roc_area_v[1]=roc_out$A
+roc_pvalue_v[1]=roc_out$p.value
+}
+
+outcome<-as.integer(volumes_obs<volume_q50)
+forecasted<-as.integer(apply(volumes_sim,1,quantile,0.5)<volume_q50)
+forecasted<-forecasted[!is.na(outcome)]
+p_volume<-rowMeans(volumes_sim<volume_q50)
+p_volume<-p_volume[!is.na(outcome)]
+outcome<-na.omit(outcome)
+stemp=(sum(outcome) + sum(forecasted&!outcome))
+csi_v[2]<- (-1.0)
+if(stemp>0) csi_v[2]=sum(outcome&forecasted) / stemp
+if(mplot){
+windows(6,6)
+roc_out<-verification::roc.plot(outcome,p_volume,thresholds=seq(0.0,1.0,by=0.1))
+roc_area_v[1]=roc_out$roc.vol$Area
+roc_pvalue_v[1]=roc_out$roc.vol$p.value
+}
+else {
+roc_out<-verification::roc.area(outcome,p_volume)
+roc_area_v[1]=roc_out$A
+roc_pvalue_v[1]=roc_out$p.value
+}
+
+
+
+
+
+for(j in 1 : 3){
+#print(dim(maxvalues_sim))
+#print(length(maxvalues_obs))
+#print(apply(maxvalues_sim,1,quantile,0.5))
+#Use untransformed ensembles and compare to HBV model flood quantiles
+outcome<-as.integer(maxvalues_obs>flood_values[ci,(3+j)])
+forecasted<-as.integer(apply(maxvalues_sim,1,quantile,0.5)>flood_values[ci,(6+j)])
+#if(sum(na.omit(outcome))==0)
+#roc_area[j] <- 0
+#roc_pvalue[j] <- 0
+#csi[j]<- -1.0
+p_flood<-rowMeans(maxvalues_sim>flood_values[ci,(6+j)])
+p_flood<-p_flood[!is.na(outcome)]
+forecasted<-forecasted[!is.na(outcome)]
+outcome<-na.omit(outcome)
+#print(outcome)
+#print(forecasted)
+stemp=(sum(outcome) + sum(forecasted&!outcome))
+csi[j]<- (-1.0)
+if(stemp>0) csi[j]=sum(outcome&forecasted) / stemp
+
+if(sum(na.omit(outcome))==0){
+roc_area[j] <- -0.5
+roc_pvalue[j] <- 1.0
+}
+else{
+if(mplot){
+windows(6,6)
+roc_out<-verification::roc.plot(outcome,p_flood,thresholds=seq(0.0,1.0,by=0.1))
+roc_area[j]=roc_out$roc.vol$Area
+roc_pvalue[j]=roc_out$roc.vol$p.value
+}
+else {
+roc_out<-verification::roc.area(outcome,p_flood)
+roc_area[j]=roc_out$A
+roc_pvalue[j]=roc_out$p.value
+}
+}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 if(mplot){
 windows(6,6)
-plot(swe_start,maxvalues_obs,type="p",xlab="SWE (mm)",ylab="Flood peak",main=flood_values[ci,3])
-myfit1<-lm(maxvalues_obs~swe_start)
+plot(swe_start,maxvalues_obs,type="p",xlab="SWE (mm)",ylab="Flood peak",main=flood_values[ci,3],log='y')
+myfit1<-lm(log(maxvalues_obs)~swe_start)
 xx <- seq(min(swe_start,na.rm=T),max(swe_start,na.rm=T), length=length(swe_start))
-lines(xx, predict(myfit1, data.frame(swe_start=xx)), col="chartreuse4")
+lines(xx, exp(predict(myfit1, data.frame(swe_start=xx))), col="chartreuse4")
 
 windows(6,6)
 plot(swe_start,volumes_obs,type="p",xlab="SWE (mm)",ylab="Flood volume",main=flood_values[ci,3])
@@ -1352,13 +1616,25 @@ windows(8,8)
 plot(volumes_obs,vol_pred,xlim=c(ssmin,ssmax),ylim=c(ssmin,ssmax),xlab="Observed volume (M m3)",ylab="Regression model (m3/s)")
 legend('bottomright',legend=c(paste("Regression model cor:",round(cor(volumes_obs,vol_pred,use="pairwise.complete.obs"),2))),col=c(1),pch=c(1))
 abline(0,1)
+
+windows(12,8)
+boxplot(t(maxvalues_sim),xaxt="n",ylab="Flood (m3/s)",xlab="Year")
+axis(1,at=c(1:length(fyears)),labels=as.character(fyears))
+points(maxvalues_obs,col="blue",pch=15)
+
+windows(12,8)
+boxplot(t(volumes_sim),xaxt="n",ylab="Volumes (M m3)",xlab="Year")
+axis(1,at=c(1:length(fyears)),labels=as.character(fyears))
+points(volumes_obs,col="blue",pch=15)
 }
+
 out<-list()
 out$corr<-cor(maxvalues_obs,max_pred,use="pairwise.complete.obs")
 out$corr_v<-cor(volumes_obs,vol_pred,use="pairwise.complete.obs")
 out$Reff<-1.0-(mean((max_pred-maxvalues_obs)^2,na.rm=TRUE)/var(maxvalues_obs,na.rm=TRUE))
 out$Reff_v<-1.0-(mean((vol_pred-volumes_obs)^2,na.rm=TRUE)/var(volumes_obs,na.rm=TRUE))
 
+<<<<<<< HEAD
 out$STD<-predict(myfit1, data.frame(swe_start=swe_start[i]),interval = "prediction",
                  se.fit = TRUE)
 
@@ -1370,6 +1646,33 @@ out$standardavviket<-(abs(out$STD$fit[1,1]-out$STD$fit[1,2])/1.96)
 out$standardavviket_volum<-(abs(out$STD_volum$fit[1,1]-out$STD_volum$fit[1,2])/1.96)
 
 out$swe_start<-swe_start[i]<-swe[i,mi,temps[i,mi,,1]<0 & precs[i,mi,,1]<=0.0001,1][1]
+=======
+
+out$crpss<-SpecsVerification::EnsCrpss(maxvalues_sim, ens.ref, maxvalues_obs) 
+out$brierss_qmean<-SpecsVerification::EnsBrierSs(bb_qsimmean, bb_ensmean, bb_qmean,0.5)
+out$brierss_q5<-SpecsVerification::EnsBrierSs(bb_qsimq5, bb_ensq5, bb_q5,0.5)
+out$brierss_q50<-SpecsVerification::EnsBrierSs(bb_qsimq50, bb_ensq50, bb_q50,0.5)
+
+out$crpss_v<-SpecsVerification::EnsCrpss(volumes_sim, ens.ref.v, volumes_obs) 
+out$brierss_q50<-SpecsVerification::EnsBrierSs(bb_v_qsimq50,bb_v_ensq50, bb_v_q50,0.5)
+out$brierss_q20<-SpecsVerification::EnsBrierSs(bb_v_qsimq20,bb_v_ensq20, bb_v_q20,0.5)
+
+out$rankhist<-SpecsVerification::Rankhist(maxvalues_sim, maxvalues_obs)
+if(mplot){
+windows(6,4)
+SpecsVerification::PlotRankhist(out$rankhist)
+}
+
+out$roc_area<-roc_area
+out$roc_pvalue<-roc_pvalue
+
+out$roc_area_v<-roc_area_v
+out$roc_pvalue_v<-roc_pvalue_v
+
+
+out$csi<-csi
+out$csi_v<-csi_v
+>>>>>>> refs/remotes/origin/master
 
 #out$fit<-myfit1
 
