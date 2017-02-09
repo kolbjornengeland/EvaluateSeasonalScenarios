@@ -1101,9 +1101,68 @@ return(bss_out)
 
 
 
+get_STD_month<-function(out,mm){
+  
+  ncc<-(length(out)-1)
+  
+  STD_all<-rep(NA,ncc)
+  
+  for(i in 1 : ncc)
+    
+    STD_all[i]<- out[[i]][[mm]]$standardavviket 
+  
+  names(STD_all)<-names(out)[1:ncc]
+  
+  return(STD_all)
+  
+}
+
+get_STD_all<-function(out,ndata){
+  ncc<-(length(out)-1)
+  STD_out<-matrix(NA,ncol=7,nrow=ncc)
+  colnames(STD_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','Jul')
+  rownames(STD_out)<-names(out)[1:ncc]
+  for(i in 1 : 7){
+    STD_out[,i]<-get_STD_month(out,i)
+  }
+  return(STD_out)
+}
 
 
 
+get_SWE_month<-function(out,mm){
+  
+  ncc<-(length(out)-1)
+  
+  SWE_all<-rep(NA,ncc)
+  
+  for(i in 1 : ncc)
+    
+    SWE_all[i]<- out[[i]][[mm]]$swe_start
+  
+  names(SWE_all)<-names(out)[1:ncc]
+  
+  return(SWE_all)
+  
+}
+
+get_SWE_all<-function(out,ndata){
+  
+  ncc<-(length(out)-1)
+  
+  SWE_out<-matrix(NA,ncol=7,nrow=ncc)
+  
+  colnames(SWE_out)<-c('Jan','Feb','Mar','Apr','Mai','Jun','juli')
+  
+  rownames(SWE_out)<-names(out)[1:ncc]
+  
+  for(i in 1 : 7)
+    
+    SWE_out[,i]<-get_SWE_month(out,i)
+  
+  return(SWE_out)
+  
+}
 
 
 
@@ -1258,6 +1317,8 @@ myfit2<-lm(volumes_obs[si]~swe_start[si])
 #predict for year i
 max_pred[i]<-predict(myfit1, data.frame(swe_start=swe_start[i]))
 vol_pred[i]<-predict(myfit2, data.frame(swe_start=swe_start[i]))
+
+
 }
 
 #  xx <- seq(min(x,na.rm=T),max(x,na.rm=T), length=length(unique_years))
@@ -1293,11 +1354,25 @@ legend('bottomright',legend=c(paste("Regression model cor:",round(cor(volumes_ob
 abline(0,1)
 }
 out<-list()
-out$corr<-cor(maxvalues_obs,vol_pred,use="pairwise.complete.obs")
+out$corr<-cor(maxvalues_obs,max_pred,use="pairwise.complete.obs")
 out$corr_v<-cor(volumes_obs,vol_pred,use="pairwise.complete.obs")
 out$Reff<-1.0-(mean((max_pred-maxvalues_obs)^2,na.rm=TRUE)/var(maxvalues_obs,na.rm=TRUE))
 out$Reff_v<-1.0-(mean((vol_pred-volumes_obs)^2,na.rm=TRUE)/var(volumes_obs,na.rm=TRUE))
+
+out$STD<-predict(myfit1, data.frame(swe_start=swe_start[i]),interval = "prediction",
+                 se.fit = TRUE)
+
+out$STD_volum<-predict(myfit2, data.frame(swe_start=swe_start[i]),interval = "prediction",
+                 se.fit = TRUE)
+
+out$standardavviket<-(abs(out$STD$fit[1,1]-out$STD$fit[1,2])/1.96)
+
+out$standardavviket_volum<-(abs(out$STD_volum$fit[1,1]-out$STD_volum$fit[1,2])/1.96)
+
+out$swe_start<-swe_start[i]<-swe[i,mi,temps[i,mi,,1]<0 & precs[i,mi,,1]<=0.0001,1][1]
+
 #out$fit<-myfit1
+
 return(out)
 
 }
@@ -1305,6 +1380,7 @@ return(out)
 
 
 
+      
 
 
 
