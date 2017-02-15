@@ -1234,6 +1234,7 @@ analyse_all_swe<-function(npath,flood_values,qtrans,empqt=FALSE){
 
 
 
+
 analyze_forecast_swe<-function(rnr,hnr,smonth,fpath="../data/netcdf/",flood_values,qtrans=NA,mplot=TRUE,empqt=FALSE){
 
 if (!require('RNetCDF')) {
@@ -1390,10 +1391,10 @@ myfit1<-lm(log(maxvalues_obs[si])~swes)
 myfit2<-lm(volumes_obs[si]~swes)
 
 #predict for year i
-<<<<<<< HEAD
+#<<<<<<< HEAD
 max_pred[i]<-predict(myfit1, data.frame(swe_start=swe_start[i]))
 vol_pred[i]<-predict(myfit2, data.frame(swe_start=swe_start[i]))
-=======
+#=======
 max_p<-predict(myfit1, data.frame(swes=swe_start[i]),interval = "prediction",se.fit = TRUE)
 vol_p<-predict(myfit2, data.frame(swes=swe_start[i]),interval = "prediction",se.fit = TRUE)
 
@@ -1444,7 +1445,7 @@ bb_v_q20[i]<- as.integer(volumes_obs[i]<volume_q20) # which of the observed volu
 
 bb_v_qsimq50[i,]<- as.integer(volumes_sim[i,]<volume_q50) # which of the observed volumes are below v50 ?
 bb_v_qsimq20[i,]<- as.integer(volumes_sim[i,]<volume_q20) # which of the observed volumes are below v50 ?
->>>>>>> refs/remotes/origin/master
+#>>>>>>> refs/remotes/origin/master
 
 
 }
@@ -1634,7 +1635,7 @@ out$corr_v<-cor(volumes_obs,vol_pred,use="pairwise.complete.obs")
 out$Reff<-1.0-(mean((max_pred-maxvalues_obs)^2,na.rm=TRUE)/var(maxvalues_obs,na.rm=TRUE))
 out$Reff_v<-1.0-(mean((vol_pred-volumes_obs)^2,na.rm=TRUE)/var(volumes_obs,na.rm=TRUE))
 
-<<<<<<< HEAD
+#<<<<<<< HEAD
 out$STD<-predict(myfit1, data.frame(swe_start=swe_start[i]),interval = "prediction",
                  se.fit = TRUE)
 
@@ -1646,7 +1647,10 @@ out$standardavviket<-(abs(out$STD$fit[1,1]-out$STD$fit[1,2])/1.96)
 out$standardavviket_volum<-(abs(out$STD_volum$fit[1,1]-out$STD_volum$fit[1,2])/1.96)
 
 out$swe_start<-swe_start[i]<-swe[i,mi,temps[i,mi,,1]<0 & precs[i,mi,,1]<=0.0001,1][1]
-=======
+
+#out$swe_andel_årsnedbør<-(swe_start[i]<-swe[i,mi,temps[i,mi,,1]<0 & precs[i,mi,,1]<=0.0001,1][1]
+#/Mprec)
+#=======
 
 out$crpss<-SpecsVerification::EnsCrpss(maxvalues_sim, ens.ref, maxvalues_obs) 
 out$brierss_qmean<-SpecsVerification::EnsBrierSs(bb_qsimmean, bb_ensmean, bb_qmean,0.5)
@@ -1672,7 +1676,7 @@ out$roc_pvalue_v<-roc_pvalue_v
 
 out$csi<-csi
 out$csi_v<-csi_v
->>>>>>> refs/remotes/origin/master
+#>>>>>>> refs/remotes/origin/master
 
 #out$fit<-myfit1
 
@@ -1687,3 +1691,139 @@ return(out)
 
 
 
+
+
+
+
+
+
+
+
+
+extraxt_model_fits_swe<-function(rnr,hnr,smonth,fpath="../data/netcdf/",flood_values,qtrans=NA,mplot=TRUE,empqt=FALSE){
+  
+  if (!require('RNetCDF')) {
+    stop('The package RNetCDF was not installed')
+  }
+  
+  if (!require('nsRFA')) {
+    stop('The package nsRFA was not installed')
+  }
+  
+  if (!require('verification')) {
+    stop('The package verification was not installed')
+  }
+  
+  if (!require('SpecsVerification')) {
+    stop('The package SpecsVerification was not installed')
+  }  
+  
+  ci<-which(flood_values[,3]==paste(rnr,'_',hnr,sep=''))  
+
+  ndays<-c(31,28,31,30,31,30,31)
+  lmax<-sum(ndays[smonth:7])
+  
+ 
+  
+  nc<-RNetCDF::open.nc(paste(fpath,"seasonal_forecast_database_",rnr,'.',hnr,".nc",sep=''),main=flood_values[ci,3])
+                       fyears<-RNetCDF::var.get.nc(nc,"Year")
+                       fmonths<-RNetCDF::var.get.nc(nc,"Month")
+                       scenario<-RNetCDF::var.get.nc(nc,"Scenario")
+                       leadtime<-RNetCDF::var.get.nc(nc,"LeadTime")
+                       qobs<-RNetCDF::var.get.nc(nc,"qobs")
+                       qsim<-RNetCDF::var.get.nc(nc,"vf")
+                       swe<-var.get.nc(nc,"swe")
+                       precs<-var.get.nc(nc,"p")
+                       temps<-var.get.nc(nc,"t")
+                       
+                       #yi=which(syear==fyears)
+                       mi=which(smonth==fmonths)
+                       swe_start<-rep(NA,length(fyears))
+                       
+                       maxvalues_obs<-rep(NA,length(fyears))
+                       volumes_obs<-maxvalues_obs
+                       max_regr<-maxvalues_obs
+                       vol_regr<-maxvalues_obs
+                       
+                       max_hbv<-maxvalues_obs
+                       vol_hbv<-maxvalues_obs
+                       
+                       
+                       for(i in 1 : length(fyears)){  # loop on years
+                         # This loop is for extracting data, i.e. maximum values and volumes for each year
+                         qobs_sel<-qobs[i,mi,1:lmax]
+                         
+                         # Extract streamflow volumes
+                         if ( any(is.na(qobs_sel))){
+                           volumes_obs[i]<-NA
+                           maxvalues_obs[i]<-NA
+                         }
+                         else{
+                           volumes_obs[i]<-sum(qobs_sel,na.rm=TRUE)*60*60*24/1000000
+                           maxvalues_obs[i]<-max(qobs_sel,na.rm=TRUE)
+                         }
+                         
+                         # Extract  the snow water equivalent for the firts day
+                         swe_start[i]<-swe[i,mi,temps[i,mi,,1]<0 & precs[i,mi,,1]<=0.0001,1][1]
+                         
+                       }
+                       
+                       # If less than 10 years with observed maximumvalues provides a swe at the start of the month, no regression!
+                       doregression<-TRUE
+                       if(sum(!is.na(swe_start*maxvalues_obs))<10)doregression<-FALSE
+                       
+                       # Regression - cross validation!
+                       
+                       
+                       
+                       for(i in 1 : length(fyears)){
+                         
+                         #loop on years
+                         
+                         #The current year is excluded in order to perform cross-validation
+                         si=which(fyears[i]!=scenario)
+                         
+                         qsim_sel<-qsim[i,mi,si,1:lmax]
+                         max_hbv<-quantile(apply(qsim_sel,1,max,na.rm=TRUE),0.5)
+                         vol_hbv<-quantile(apply(qsim_sel,1,sum,na.rm=TRUE)*60*60*24/1000000,0.5)
+                         
+                         # Fit the linear models with year i excluded.
+                         if(doregression){
+                           swes=swe_start[si]
+                           myfit1<-lm(log(maxvalues_obs[si])~swes)
+                           myfit2<-lm(volumes_obs[si]~swes)
+                           
+                           #predict for year i
+                           max_p<-predict(myfit1, data.frame(swes=swe_start[i]),interval = "prediction",se.fit = TRUE)
+                           vol_p<-predict(myfit2, data.frame(swes=swe_start[i]),interval = "prediction",se.fit = TRUE)
+                           
+                           max_regr[i]<-max_p$fit[1]
+                           vol_regr[i]<-vol_p$fit[1]
+                         }
+                         else{
+                           max_regr[i]<-NA
+                           vol_regr[i]<-NA
+                         }
+                         
+                       }
+                       
+                       
+                       out<-list()
+                       out$maxvalues_obs<-maxvalues_obs
+                       out$volumes_obs<-volumes_obs
+                       out$max_pred<-max_regr
+                       out$vol_pred<-vol_regr
+                       out$swe_start<-swe_start
+                       
+                       out$max_hbv<-max_hbv
+                       out$vol_hbv<-vol_hbv
+                       
+                       out$corr<-cor(maxvalues_obs,max_regr,use="pairwise.complete.obs")
+                       out$corr_volum<-cor(volumes_obs,vol_regr,use="pairwise.complete.obs")
+                       
+                       #out$test<-(abs(out$maxvalues_obs-out$max_pred))
+                       #out$test2<-(abs(out$volumes_obs-out$vol_pred))
+                      
+                       return(out)
+                       
+}
